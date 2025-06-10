@@ -14,30 +14,30 @@ import { EncryptionModule } from 'src/encryption/encryption.module';
 import { AuthResolver } from './auth.resolver';
 
 @Module({
-  imports: [
-    ConfigModule,
-    PassportModule,
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get('JWT_SECRET'),
-        signOptions: {
-          expiresIn: configService.get('JWT_EXPIRATION'),
-        },
-      }),
-    }),
-    EncryptionModule,
-    SessionsModule,
-    UsersModule,
-  ],
-  providers: [
-    AuthService,
-    AuthResolver,
-    JwtStrategy,
-    LocalStrategy,
-    JwtAuthGuard,
-    LocalAuthGuard,
-  ],
+    imports: [
+        ConfigModule,
+        PassportModule,
+        JwtModule.registerAsync({
+            imports: [ConfigModule],
+            inject: [ConfigService],
+            useFactory: (configService: ConfigService) => ({
+                secret: configService.get('JWT_SECRET'),
+                signOptions: {
+                    expiresIn: configService.get('JWT_EXPIRATION'),
+                },
+            }),
+        }),
+        EncryptionModule,
+        SessionsModule,
+        UsersModule,
+    ],
+    providers: [
+        AuthService,
+        AuthResolver,
+        JwtStrategy,
+        LocalStrategy,
+        JwtAuthGuard,
+        LocalAuthGuard,
+    ],
 })
 export class AuthModule {}

@@ -5,43 +5,38 @@ import { User, UserDocument } from './schemas/user.schema';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @InjectModel(User.name)
-    private userModel: Model<UserDocument>,
-  ) {}
+    constructor(
+        @InjectModel(User.name)
+        private userModel: Model<UserDocument>
+    ) {}
 
-  async create(
-    userData: Omit<
-      User,
-      '_id' | 'isActive' | 'createdAt' | 'updatedAt' | 'emailVerified'
-    >,
-  ) {
-    const existingUser = await this.findByEmail(userData.email);
-    if (existingUser) {
-      throw new ConflictException('User with this email already exists');
+    async create(
+        userData: Omit<User, '_id' | 'isActive' | 'createdAt' | 'updatedAt' | 'emailVerified'>
+    ) {
+        const existingUser = await this.findByEmail(userData.email);
+        if (existingUser) {
+            throw new ConflictException('User with this email already exists');
+        }
+
+        const user = new this.userModel({
+            ...userData,
+            isActive: true,
+            emailVerified: false,
+            emailVerificationCode: 'dummy', // Todo: Add random generation.
+        });
+
+        return user.save();
     }
 
-    const user = new this.userModel({
-      ...userData,
-      isActive: true,
-      emailVerified: false,
-      emailVerificationCode: 'dummy', // Todo: Add random generation.
-    });
+    async findById(id: string) {
+        return this.userModel.findById(id).exec();
+    }
 
-    return user.save();
-  }
+    async findByEmail(email: string) {
+        return this.userModel.findOne({ email, isActive: true }).exec();
+    }
 
-  async findById(id: string) {
-    return this.userModel.findById(id).exec();
-  }
-
-  async findByEmail(email: string) {
-    return this.userModel.findOne({ email, isActive: true }).exec();
-  }
-
-  async updateLastLogin(userId: string) {
-    return this.userModel
-      .findByIdAndUpdate(userId, { lastLogin: new Date() })
-      .exec();
-  }
+    async updateLastLogin(userId: string) {
+        return this.userModel.findByIdAndUpdate(userId, { lastLogin: new Date() }).exec();
+    }
 }
