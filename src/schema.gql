@@ -2,6 +2,11 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
 type DeviceInfo {
   browser: String
   ip: String!
@@ -9,8 +14,18 @@ type DeviceInfo {
   userAgent: String!
 }
 
+input LoginDTO {
+  email: String!
+  password: String!
+}
+
 type Mutation {
+  login(payload: LoginDTO!): SessionResponse!
+  logout: Boolean!
+  refreshToken(refreshToken: String!): SessionResponse!
   register(payload: RegisterDto!): SessionResponse!
+  revokeAllSessions: Boolean!
+  revokeSession(sessionId: String!): Boolean!
 }
 
 type Query {
@@ -26,4 +41,16 @@ input RegisterDto {
 type SessionResponse {
   accessToken: String!
   refreshToken: String!
+  user: User
+}
+
+type User {
+  _id: String!
+  createdAt: DateTime!
+  decryptKey: String!
+  displayName: String!
+  email: String!
+  emailVerified: Boolean!
+  encryptKey: String!
+  updatedAt: DateTime!
 }

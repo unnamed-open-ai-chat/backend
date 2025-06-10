@@ -1,8 +1,13 @@
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 
+import { UseGuards } from '@nestjs/common';
 import { SessionResponse } from 'src/sessions/schemas/session.schema';
 import { AuthService } from './auth.service';
+import { CurrentUser } from './decorators/current-user.decorator';
+import { LoginDTO } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { AccessJwtPayload } from './interfaces/jwt-payload.interface';
 
 @Resolver(() => SessionResponse)
 export class AuthResolver {
@@ -18,17 +23,83 @@ export class AuthResolver {
         return await this.authService.register(payload, deviceInfo);
     }
 
-    @Query(() => [SessionResponse])
-    async getSessions(): Promise<SessionResponse[]> {
-        return [];
+    @Mutation(() => SessionResponse)
+    async login(
+        @Args('payload') payload: LoginDTO,
+        @Context() context: any
+    ): Promise<SessionResponse> {
+        const req = context.req;
+        const deviceInfo = this.createDeviceInfo(req);
+        return this.authService.login(payload, deviceInfo);
     }
 
-    createDeviceInfo(req: any) {
+    @Mutation(() => SessionResponse)
+    async refreshToken(@Args('refreshToken') refreshToken: string): Promise<SessionResponse> {
+        return this.authService.refreshTokens(refreshToken);
+    }
+
+    @Query(() => [SessionResponse])
+    @UseGuards(JwtAuthGuard)
+    async getSessions(@CurrentUser() user: AccessJwtPayload): Promise<SessionResponse[]> {
+        return await this.authService.getUserSessions(user.sub);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Mutation(() => Boolean)
+    async logout(@CurrentUser() user: AccessJwtPayload): Promise<boolean> {
+        await this.authService.logout(user.sub, user.sessionId);
+        return true;
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Mutation(() => Boolean)
+    async revokeSession(
+        @Args('sessionId') sessionId: string,
+        @CurrentUser() user: AccessJwtPayload
+    ): Promise<boolean> {
+        await this.authService.logout(user.sub, sessionId);
+        return true;
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Mutation(() => Boolean)
+    async revokeAllSessions(@CurrentUser() user: AccessJwtPayload): Promise<boolean> {
+        await this.authService.logoutAll(user.sub);
+        return true;
+    }
+
+    private createDeviceInfo(req: any) {
+        const ua: string = req.headers['user-agent'] || 'unknown';
+
         return {
-            userAgent: req.headers['user-agent'] || 'Unknown',
+            userAgent: ua,
             ip: req.ip || req.connection.remoteAddress || '0.0.0.0',
-            platform: req.headers['sec-ch-ua-platform'],
-            browser: req.headers['sec-ch-ua'],
+            platform: this.extractPlatform(ua),
+            browser: this.extractBrowser(ua),
         };
+    }
+
+    private extractPlatform(userAgent?: string): string {
+        if (!userAgent) return 'unknown';
+
+        if (userAgent.includes('Windows')) return 'windows';
+        if (userAgent.includes('Mac')) return 'macOS';
+        if (userAgent.includes('Linux')) return 'linux';
+        if (userAgent.includes('Android')) return 'android';
+        if (userAgent.includes('iPhone') || userAgent.includes('ipad')) return 'ios';
+
+        return 'unknown';
+    }
+
+    private extractBrowser(userAgent?: string): string {
+        if (!userAgent) return 'unknown';
+
+        if (userAgent.includes('Chrome')) return 'chrome';
+        if (userAgent.includes('Firefox')) return 'firefox';
+        if (userAgent.includes('Safari')) return 'safari';
+        if (userAgent.includes('Edge')) return 'edge';
+        if (userAgent.includes('Opera')) return 'ppera';
+
+        return 'unknown';
     }
 }

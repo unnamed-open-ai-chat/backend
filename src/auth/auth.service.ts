@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import crypto from 'crypto';
+import * as crypto from 'crypto';
 
 import { EncryptionService } from 'src/encryption/encryption.service';
 import { UsersService } from 'src/users/users.service';
@@ -102,6 +102,7 @@ export class AuthService {
             return {
                 accessToken: newAccessToken,
                 refreshToken: newRefreshToken,
+                user,
             };
         } catch {
             throw new UnauthorizedException('Invalid or expired refresh token');
@@ -165,6 +166,7 @@ export class AuthService {
         return {
             accessToken,
             refreshToken,
+            user,
         };
     }
 }

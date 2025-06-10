@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 
 import { Field, ObjectType } from '@nestjs/graphql';
+import { User } from 'src/users/schemas/user.schema';
 import { DeviceInfo } from '../../auth/interfaces/device-info.interface';
 
 @Schema({ timestamps: true })
@@ -42,6 +43,8 @@ export class SessionResponse {
     accessToken: string;
     @Field()
     refreshToken: string;
+    @Field({ nullable: true })
+    user?: User;
 }
 
 export const SessionSchema = SchemaFactory.createForClass(Session);
