@@ -1,0 +1,29 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type DeviceInfo {
+  browser: String
+  ip: String!
+  platform: String
+  userAgent: String!
+}
+
+type Mutation {
+  register(payload: RegisterDto!): SessionResponse!
+}
+
+type Query {
+  getSessions: [SessionResponse!]!
+}
+
+input RegisterDto {
+  displayName: String!
+  email: String!
+  password: String!
+}
+
+type SessionResponse {
+  accessToken: String!
+  refreshToken: String!
+}
