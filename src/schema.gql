@@ -2,6 +2,11 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+input ChangePasswordDTO {
+  newPassword: String!
+  oldPassword: String!
+}
+
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
@@ -26,6 +31,7 @@ type Mutation {
   register(payload: RegisterDto!): SessionResponse!
   revokeAllSessions: Boolean!
   revokeSession(sessionId: String!): Boolean!
+  updatePassword(payload: ChangePasswordDTO!): User!
 }
 
 type Query {

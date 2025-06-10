@@ -8,6 +8,7 @@ import { UsersService } from 'src/users/users.service';
 import { SessionResponse } from '../sessions/schemas/session.schema';
 import { SessionsService } from '../sessions/sessions.service';
 import { comparePassword, User } from '../users/schemas/user.schema';
+import { ChangePasswordDTO } from './dto/change-password.dto';
 import { LoginDTO } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { DeviceInfo } from './interfaces/device-info.interface';
@@ -34,6 +35,7 @@ export class AuthService {
 
         // Generate encryption keys for key vault
         const { encryptKey, decryptKey } = this.encryptionService.generateKeyPair();
+        const encryptedDecryptKey = this.encryptionService.encrypt(decryptKey, password);
 
         // Create user
         const user = await this.usersService.create({
@@ -41,7 +43,7 @@ export class AuthService {
             password,
             displayName,
             encryptKey,
-            decryptKey,
+            decryptKey: encryptedDecryptKey,
         });
 
         // Create initial session
@@ -81,9 +83,6 @@ export class AuthService {
 
             // Find user
             const user = await this.usersService.findById(session.userId.toString());
-            if (!user) {
-                throw new UnauthorizedException('Invalid or expired refresh token');
-            }
 
             // Generate new tokens
             const newAccessToken = this.generateAccessToken(user, session._id.toString());
@@ -119,6 +118,25 @@ export class AuthService {
 
     async getUserSessions(userId: string) {
         return this.sessionService.findByUserId(userId);
+    }
+
+    async updatePassword(
+        userId: string,
+        { oldPassword, newPassword }: ChangePasswordDTO
+    ): Promise<User> {
+        const user = await this.usersService.findById(userId);
+        const matchPassword = await comparePassword(oldPassword, user.password);
+
+        if (!matchPassword) {
+            throw new UnauthorizedException('Invalid Old Password');
+        }
+
+        const oldDecryptKey = this.encryptionService.decrypt(user.decryptKey, oldPassword);
+        const newDecryptKey = this.encryptionService.encrypt(oldDecryptKey, newPassword);
+        user.decryptKey = newDecryptKey;
+        await user.save();
+
+        return user;
     }
 
     generateAccessToken(user: User, sessionId: string): string {

@@ -2,8 +2,10 @@ import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 
 import { UseGuards } from '@nestjs/common';
 import { SessionResponse } from 'src/sessions/schemas/session.schema';
+import { User } from 'src/users/schemas/user.schema';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
+import { ChangePasswordDTO } from './dto/change-password.dto';
 import { LoginDTO } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -31,6 +33,15 @@ export class AuthResolver {
         const req = context.req;
         const deviceInfo = this.createDeviceInfo(req);
         return this.authService.login(payload, deviceInfo);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Mutation(() => User)
+    async updatePassword(
+        @CurrentUser() user: AccessJwtPayload,
+        @Args('payload') payload: ChangePasswordDTO
+    ): Promise<User> {
+        return await this.authService.updatePassword(user.sub, payload);
     }
 
     @Mutation(() => SessionResponse)
