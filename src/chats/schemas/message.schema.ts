@@ -2,18 +2,6 @@ import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
-@ObjectType()
-export class MessageTokenUsage {
-    @Field()
-    promptTokens: number;
-
-    @Field()
-    completionTokens: number;
-
-    @Field()
-    totalTokens: number;
-}
-
 export enum MessageRole {
     SYSTEM = 'system',
     USER = 'user',
@@ -72,9 +60,9 @@ export class Message {
     @Field({ nullable: true })
     modelUsed?: string;
 
-    @Prop({ type: Object })
-    @Field(() => MessageTokenUsage)
-    tokens: MessageTokenUsage;
+    @Prop({ default: 0 })
+    @Field({ nullable: true })
+    tokens: number;
 
     @Prop([{ type: [Types.ObjectId], ref: 'File' }])
     @Field(() => [String])
@@ -88,11 +76,11 @@ export class Message {
     isEdited: boolean;
 
     @Prop()
-    @Field()
+    @Field({ nullable: true })
     editedAt?: Date;
 
     @Prop()
-    @Field(() => [MessageContent])
+    @Field(() => [MessageContent], { nullable: true })
     originalContent?: MessageContent[];
 }
 

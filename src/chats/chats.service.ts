@@ -8,7 +8,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, RootFilterQuery, Types } from 'mongoose';
 
 import { BranchesService } from './branches.service';
-import { CreateChatDTO } from './dto/create-chat.dto';
 import { GetManyChatsDto } from './dto/get-chat-dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
 import { Chat, ChatDocument, ChatsResponse } from './schemas/chat.schema';
@@ -20,11 +19,7 @@ export class ChatService {
         private readonly branchServices: BranchesService
     ) {}
 
-    async createChat(userId: string, createChatDto: CreateChatDTO) {
-        // ToDo: create initial message and set pending job queue.
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { firstPrompt, model } = createChatDto;
-
+    async createChat(userId: string): Promise<ChatDocument> {
         // Create chat
         const chat = new this.chatModel({
             userId: new Types.ObjectId(userId),
@@ -36,13 +31,13 @@ export class ChatService {
         await chat.save();
 
         // Create default branch
-        const defaultBranch = await this.branchServices.create(userId, chat._id.toString(), 'main');
+        const defaultBranch = await this.branchServices.create(userId, chat, 'main');
 
         // update chat with default branch
         chat.defaultBranch = defaultBranch._id;
         await chat.save();
 
-        return chat;
+        return await chat.populate('defaultBranch');
     }
 
     async findById(chatId: string, userId?: string, populate = true): Promise<ChatDocument> {
@@ -118,5 +113,9 @@ export class ChatService {
         chat.pinned = updateData.pinned ?? chat.pinned;
 
         return await chat.save();
+    }
+
+    async updateLastActivity(chatId: string): Promise<void> {
+        await this.chatModel.findByIdAndUpdate(chatId, { lastActivityAt: new Date() }).exec();
     }
 }

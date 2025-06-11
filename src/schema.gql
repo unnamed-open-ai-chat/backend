@@ -7,6 +7,14 @@ enum AIProviderId {
   google
 }
 
+input AddMessageDto {
+  apiKeyId: String!
+  branchId: String!
+  modelId: String!
+  prompt: String!
+  rawDecryptKey: String!
+}
+
 type ApiKey {
   _id: String!
   alias: String!
@@ -24,7 +32,7 @@ input ChangePasswordDTO {
 type Chat {
   _id: String!
   archived: Boolean!
-  defaultBranch: ChatBranch!
+  defaultBranch: ChatBranch
   isPublic: Boolean!
   lastActivityAt: DateTime!
   pinned: Boolean!
@@ -92,13 +100,13 @@ type Message {
   attachments: [String!]!
   branchId: String!
   content: [MessageContent!]!
-  editedAt: DateTime!
+  editedAt: DateTime
   index: Float!
   isEdited: Boolean!
   modelUsed: String
-  originalContent: [MessageContent!]!
+  originalContent: [MessageContent!]
   role: String!
-  tokens: MessageTokenUsage!
+  tokens: Float
 }
 
 type MessageContent {
@@ -109,12 +117,6 @@ type MessageContent {
   type: String!
 }
 
-type MessageTokenUsage {
-  completionTokens: Float!
-  promptTokens: Float!
-  totalTokens: Float!
-}
-
 type MessagesResponse {
   hasMore: Boolean!
   messages: [Message!]!
@@ -123,6 +125,7 @@ type MessagesResponse {
 
 type Mutation {
   addApiKey(payload: CreateApiKeyDto!): ApiKey!
+  createChat: Chat!
   deleteApiKey(id: String!): Boolean!
   login(payload: LoginDTO!): SessionResponse!
   logout: Boolean!
@@ -130,6 +133,7 @@ type Mutation {
   register(payload: RegisterDto!): SessionResponse!
   revokeAllSessions: Boolean!
   revokeSession(sessionId: String!): Boolean!
+  sendMessage(payload: AddMessageDto!): Boolean!
   updateApiKey(id: String!, payload: UpdateApiKeyDto!): ApiKey!
   updatePassword(payload: ChangePasswordDTO!): User!
 }
@@ -151,6 +155,7 @@ input RegisterDto {
 
 type SessionResponse {
   accessToken: String!
+  rawDecryptKey: String
   refreshToken: String!
   user: User
 }

@@ -47,7 +47,7 @@ export class AuthService {
         });
 
         // Create initial session
-        return this.createUserSession(user, deviceInfo);
+        return this.createUserSession(user, deviceInfo, decryptKey);
     }
 
     async login(loginDto: LoginDTO, deviceInfo: DeviceInfo): Promise<SessionResponse> {
@@ -68,8 +68,11 @@ export class AuthService {
         // Update last login
         await this.usersService.updateLastLogin(user._id.toString());
 
+        // Decrypt key
+        const decryptKey = this.encryptionService.decrypt(user.decryptKey, password);
+
         // Create session
-        return await this.createUserSession(user, deviceInfo);
+        return await this.createUserSession(user, deviceInfo, decryptKey);
     }
 
     async refreshTokens(refreshToken: string): Promise<SessionResponse> {
@@ -162,7 +165,11 @@ export class AuthService {
         );
     }
 
-    async createUserSession(user: User, deviceInfo: DeviceInfo): Promise<SessionResponse> {
+    async createUserSession(
+        user: User,
+        deviceInfo: DeviceInfo,
+        rawDecryptKey?: string
+    ): Promise<SessionResponse> {
         // Generate tokens
         const sessionId = crypto.randomUUID();
         const accessToken = this.generateAccessToken(user, sessionId);
@@ -185,6 +192,7 @@ export class AuthService {
             accessToken,
             refreshToken,
             user,
+            rawDecryptKey,
         };
     }
 }

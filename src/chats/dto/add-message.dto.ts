@@ -1,7 +1,5 @@
 import { Field, InputType } from '@nestjs/graphql';
-import { IsArray, IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
-
-import { MessageRole } from '../schemas/message.schema';
+import { IsString, MaxLength } from 'class-validator';
 
 @InputType()
 export class AddMessageDto {
@@ -12,19 +10,17 @@ export class AddMessageDto {
     @Field()
     @IsString()
     @MaxLength(50000, { message: 'Message content must be at most 50000 characters' })
-    content: string;
-
-    @Field()
-    @IsEnum(MessageRole)
-    role: MessageRole;
-
-    @Field({ nullable: true })
-    @IsOptional()
-    @IsArray()
-    @IsString({ each: true })
-    attachments?: string[];
+    prompt: string;
 
     @Field()
     @IsString()
-    modelUsed: string;
+    modelId: string;
+
+    @Field()
+    @IsString()
+    rawDecryptKey: string;
+
+    @Field()
+    @IsString()
+    apiKeyId: string;
 }

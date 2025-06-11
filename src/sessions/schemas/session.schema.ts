@@ -45,6 +45,8 @@ export class SessionResponse {
     refreshToken: string;
     @Field({ nullable: true })
     user?: User;
+    @Field({ nullable: true })
+    rawDecryptKey?: string;
 }
 
 export const SessionSchema = SchemaFactory.createForClass(Session);

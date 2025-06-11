@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
+import { AIModule } from '@/ai/ai.module';
+import { EncryptionModule } from '@/encryption/encryption.module';
+import { ApiKeysModule } from '@/keys/api-key.module';
 import { BranchesService } from './branches.service';
 import { ChatsResolver } from './chats.resolver';
 import { ChatService } from './chats.service';
@@ -16,6 +19,9 @@ import { Message, MessageSchema } from './schemas/message.schema';
             { name: ChatBranch.name, schema: ChatBranchSchema },
             { name: Message.name, schema: MessageSchema },
         ]),
+        AIModule,
+        ApiKeysModule,
+        EncryptionModule,
     ],
     providers: [ChatService, BranchesService, MessagesService, ChatsResolver],
     exports: [ChatService, BranchesService, MessagesService],

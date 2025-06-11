@@ -47,7 +47,7 @@ export class ApiKeysService {
         const user = await this.usersService.findById(userId);
 
         // Encrypt the API key
-        const encryptedApiKey = this.encryptionService.encrypt(apiKey, user.encryptKey);
+        const encryptedApiKey = this.encryptionService.encryptWithKey(apiKey, user.encryptKey);
 
         // Create new API key document
         const newApiKey = new this.apiKeyModel({

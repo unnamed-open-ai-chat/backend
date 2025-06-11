@@ -32,6 +32,7 @@ export class AuthResolver {
     ): Promise<SessionResponse> {
         const req = context.req;
         const deviceInfo = this.createDeviceInfo(req);
+
         return this.authService.login(payload, deviceInfo);
     }
 

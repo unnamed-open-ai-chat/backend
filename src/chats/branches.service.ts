@@ -5,6 +5,7 @@ import { Model, Types } from 'mongoose';
 import { UpdateBranchDTO } from './dto/update-branch.dto';
 import { MessagesService } from './messages.service';
 import { ChatBranch, ChatBranchDocument } from './schemas/chat-branch.schema';
+import { Chat } from './schemas/chat.schema';
 
 @Injectable()
 export class BranchesService {
@@ -15,26 +16,25 @@ export class BranchesService {
 
     async create(
         userId: string,
-        chatId: string,
+        chat: Chat,
         name: string,
         parentBranchId?: string,
-        branchPoint?: number
+        branchPoint = 0
     ): Promise<ChatBranchDocument> {
         if (!Types.ObjectId.isValid(userId)) {
             throw new BadRequestException('Invalid user id');
         }
 
-        if (!Types.ObjectId.isValid(chatId)) {
-            throw new BadRequestException('Invalid chat id');
+        if (chat.userId.toString() !== userId) {
+            throw new NotFoundException('Chat not found');
         }
 
-        // ToDo: Check permissions
         const branch = new this.branchModel({
-            userId: new Types.ObjectId(userId),
-            chatId: new Types.ObjectId(chatId),
+            userId: chat.userId,
+            chatId: chat._id,
             name,
             parentBranchId: parentBranchId ? new Types.ObjectId(parentBranchId) : undefined,
-            branchPoint: branchPoint || 0,
+            branchPoint: branchPoint,
             messageCount: 0,
             isActive: true,
         });
@@ -52,7 +52,8 @@ export class BranchesService {
             throw new NotFoundException('Branch not found');
         }
 
-        if (userId && branch.userId.toString() !== userId) {
+        if (userId && branch.userId?.toString() !== userId) {
+            console.log(userId, branch.userId.toString());
             throw new NotFoundException('Branch not found');
         }
 

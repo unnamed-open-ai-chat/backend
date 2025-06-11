@@ -1,13 +1,4 @@
-import { Field, InputType } from '@nestjs/graphql';
-import { IsString } from 'class-validator';
+import { InputType } from '@nestjs/graphql';
 
 @InputType()
-export class CreateChatDTO {
-    @Field()
-    @IsString()
-    model: string;
-
-    @Field()
-    @IsString()
-    firstPrompt: string;
-}
+export class CreateChatDTO {}

@@ -2,7 +2,6 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, RootFilterQuery, Types } from 'mongoose';
 
-import { AddMessageDto } from './dto/add-message.dto';
 import { GetMessagesDto } from './dto/get-messages.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { ChatBranch } from './schemas/chat-branch.schema';
@@ -15,7 +14,9 @@ export class MessagesService {
         @InjectModel(ChatBranch.name) private branchModel: Model<ChatBranch>
     ) {}
 
-    async create(messageData: AddMessageDto): Promise<MessageDocument> {
+    async create(
+        messageData: Omit<Message, '_id' | 'originalContent' | 'index' | 'isEdited' | 'editedAt'>
+    ): Promise<MessageDocument> {
         const { branchId, content, role, attachments, modelUsed } = messageData;
 
         if (!Types.ObjectId.isValid(branchId)) {
@@ -23,7 +24,7 @@ export class MessagesService {
         }
 
         // Get next index for this branch
-        const nextIndex = await this.getNextMessageIndex(branchId);
+        const nextIndex = await this.getNextMessageIndex(branchId.toString());
 
         const message = new this.messageModel({
             branchId: new Types.ObjectId(branchId),
@@ -57,8 +58,13 @@ export class MessagesService {
             throw new BadRequestException('Invalid branch id');
         }
 
-        if (userId && !Types.ObjectId.isValid(userId)) {
-            throw new BadRequestException('Invalid user id');
+        const branch = await this.branchModel.findById(options.branchId).exec();
+        if (!branch) {
+            throw new NotFoundException('Branch not found');
+        }
+
+        if (userId && branch.userId?.toString() !== userId) {
+            throw new NotFoundException('Branch not found');
         }
 
         const { limit = 50, offset = 0, fromIndex } = options;
@@ -69,10 +75,6 @@ export class MessagesService {
 
         if (fromIndex !== undefined) {
             query.index = { $gte: fromIndex };
-        }
-
-        if (userId) {
-            query.userId = new Types.ObjectId(userId);
         }
 
         const [messages, total] = await Promise.all([

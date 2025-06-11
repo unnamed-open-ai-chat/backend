@@ -21,9 +21,9 @@ export class Chat {
     @Field()
     isPublic: boolean;
 
-    @Prop({ types: Types.ObjectId, ref: 'ChatBranch', required: true })
-    @Field(() => ChatBranch)
-    defaultBranch: Types.ObjectId;
+    @Prop({ types: Types.ObjectId, ref: 'ChatBranch' })
+    @Field(() => ChatBranch, { nullable: true })
+    defaultBranch?: Types.ObjectId;
 
     @Prop({ type: Object, default: {} })
     metadata: Record<string, any>;

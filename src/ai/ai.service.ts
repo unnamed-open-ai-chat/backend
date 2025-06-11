@@ -5,6 +5,7 @@ import { AnthropicClient } from './clients/anthropic.client';
 import { GoogleClient } from './clients/google.client';
 import {
     AIModel,
+    AIProviderCallbacks,
     AIProviderClient,
     AIProviderId,
     AIProviderOptions,
@@ -44,18 +45,9 @@ export class AIService {
         key: string,
         modelId: string,
         messages: Message[],
-        settings: AIProviderOptions
+        settings: AIProviderOptions,
+        callbacks: AIProviderCallbacks
     ) {
-        return this.clients[providerId].sendMessage(key, modelId, messages, settings, {
-            onEnd: () => {
-                console.log('End');
-            },
-            onError: error => {
-                console.log('Error', error);
-            },
-            onText: text => {
-                console.log('Text', text);
-            },
-        });
+        return this.clients[providerId].sendMessage(key, modelId, messages, settings, callbacks);
     }
 }
