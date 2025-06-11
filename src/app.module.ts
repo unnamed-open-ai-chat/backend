@@ -9,6 +9,7 @@ import { BullModule } from '@nestjs/bull';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { ChatsModule } from './chats/chats.module';
 import { EncryptionModule } from './encryption/encryption.module';
 import { SessionsModule } from './sessions/sessions.module';
 import { UsersModule } from './users/users.module';
@@ -73,6 +74,7 @@ import { UsersModule } from './users/users.module';
 
         // Feature Modules
         AuthModule,
+        ChatsModule,
         EncryptionModule,
         SessionsModule,
         UsersModule,

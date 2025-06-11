@@ -7,6 +7,31 @@ input ChangePasswordDTO {
   oldPassword: String!
 }
 
+type Chat {
+  _id: String!
+  archived: Boolean!
+  defaultBranch: ChatBranch!
+  isPublic: Boolean!
+  lastActivityAt: DateTime!
+  pinned: Boolean!
+  title: String!
+}
+
+type ChatBranch {
+  _id: String!
+  branchPoint: Float!
+  isActive: Boolean!
+  messageCount: Float!
+  name: String!
+  parentBranchId: ChatBranch
+}
+
+type ChatsResponse {
+  chats: [Chat!]!
+  hasMore: Boolean!
+  total: Float!
+}
+
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
@@ -17,6 +42,13 @@ type DeviceInfo {
   ip: String!
   platform: String
   userAgent: String!
+}
+
+input GetManyChatsDto {
+  archived: Boolean = false
+  limit: Float = 20
+  offset: Float = 0
+  search: String
 }
 
 input LoginDTO {
@@ -35,6 +67,7 @@ type Mutation {
 }
 
 type Query {
+  getChats(query: GetManyChatsDto!): ChatsResponse!
   getSessions: [SessionResponse!]!
 }
 

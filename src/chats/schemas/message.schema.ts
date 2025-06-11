@@ -1,0 +1,86 @@
+import { Field, ObjectType } from '@nestjs/graphql';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document, Types } from 'mongoose';
+
+export enum MessageRole {
+    SYSTEM = 'system',
+    USER = 'user',
+    ASSISTANT = 'assistant',
+    FUNCTION = 'function',
+    TOOL = 'tool',
+}
+
+export type MessageTokenUsage = {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+};
+
+@Schema({ timestamps: true })
+@ObjectType()
+export class Message {
+    @Field(() => String)
+    _id: Types.ObjectId;
+
+    @Prop({ types: Types.ObjectId, ref: 'ChatBranch', required: true })
+    @Field(() => String)
+    branchId: Types.ObjectId;
+
+    @Prop({ required: true })
+    @Field()
+    index: number;
+
+    @Prop({ enum: MessageRole, required: true })
+    @Field(() => String)
+    role: MessageRole;
+
+    @Prop({ required: true, maxlength: 50000 })
+    @Field()
+    content: string;
+
+    @Prop()
+    @Field({ nullable: true })
+    modelUsed?: string;
+
+    @Prop({ type: Object })
+    @Field(() => Object)
+    tokens: MessageTokenUsage;
+
+    @Prop([{ type: [Types.ObjectId], ref: 'File' }])
+    @Field(() => [Object])
+    attachments: Types.ObjectId[];
+
+    @Prop({ type: Object, default: {} })
+    metadata: Record<string, any>;
+
+    @Prop({ type: Boolean, default: false })
+    @Field()
+    isEdited: boolean;
+
+    @Prop()
+    @Field()
+    editedAt?: Date;
+
+    @Prop()
+    @Field()
+    originalContent?: string;
+}
+
+@ObjectType()
+export class MessagesResponse {
+    @Field(() => Object)
+    messages: Message[];
+    @Field()
+    total: number;
+    @Field()
+    hasMore: boolean;
+}
+
+export type MessageDocument = Message & Document;
+export const MessageSchema = SchemaFactory.createForClass(Message);
+
+MessageSchema.index({ branchId: 1, index: 1 }, { unique: true });
+MessageSchema.index({ branchId: 1, createdAt: 1 });
+MessageSchema.index({ content: 'text' });
+MessageSchema.index({ role: 1 });
+MessageSchema.index({ attachments: 1 });

@@ -8,7 +8,7 @@ import { CurrentUser } from './decorators/current-user.decorator';
 import { ChangePasswordDTO } from './dto/change-password.dto';
 import { LoginDTO } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { GqlAuthGuard } from './guards/gql-auth.guard';
 import { AccessJwtPayload } from './interfaces/jwt-payload.interface';
 
 @Resolver(() => SessionResponse)
@@ -35,7 +35,7 @@ export class AuthResolver {
         return this.authService.login(payload, deviceInfo);
     }
 
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(GqlAuthGuard)
     @Mutation(() => User)
     async updatePassword(
         @CurrentUser() user: AccessJwtPayload,
@@ -50,19 +50,19 @@ export class AuthResolver {
     }
 
     @Query(() => [SessionResponse])
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(GqlAuthGuard)
     async getSessions(@CurrentUser() user: AccessJwtPayload): Promise<SessionResponse[]> {
         return await this.authService.getUserSessions(user.sub);
     }
 
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(GqlAuthGuard)
     @Mutation(() => Boolean)
     async logout(@CurrentUser() user: AccessJwtPayload): Promise<boolean> {
         await this.authService.logout(user.sub, user.sessionId);
         return true;
     }
 
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(GqlAuthGuard)
     @Mutation(() => Boolean)
     async revokeSession(
         @Args('sessionId') sessionId: string,
@@ -72,7 +72,7 @@ export class AuthResolver {
         return true;
     }
 
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(GqlAuthGuard)
     @Mutation(() => Boolean)
     async revokeAllSessions(@CurrentUser() user: AccessJwtPayload): Promise<boolean> {
         await this.authService.logoutAll(user.sub);
