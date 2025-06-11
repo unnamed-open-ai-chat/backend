@@ -1,14 +1,6 @@
-import { Field, ObjectType } from '@nestjs/graphql';
+import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-
-export enum MessageRole {
-    SYSTEM = 'system',
-    USER = 'user',
-    ASSISTANT = 'assistant',
-    FUNCTION = 'function',
-    TOOL = 'tool',
-}
 
 @ObjectType()
 export class MessageTokenUsage {
@@ -20,6 +12,38 @@ export class MessageTokenUsage {
 
     @Field()
     totalTokens: number;
+}
+
+export enum MessageRole {
+    SYSTEM = 'system',
+    USER = 'user',
+    ASSISTANT = 'assistant',
+    FUNCTION = 'function',
+    TOOL = 'tool',
+}
+
+registerEnumType(MessageRole, {
+    name: 'MessageRole',
+});
+
+@ObjectType()
+export class MessageContent {
+    @Field()
+    type: string;
+
+    @Field({ nullable: true })
+    id?: string;
+
+    @Field({ nullable: true })
+    name?: string;
+
+    @Field({ nullable: true })
+    text?: string;
+
+    @Field({ nullable: true })
+    tool_use_id?: string;
+
+    input?: unknown;
 }
 
 @Schema({ timestamps: true })
@@ -40,9 +64,9 @@ export class Message {
     @Field(() => String)
     role: MessageRole;
 
-    @Prop({ required: true, maxlength: 50000 })
-    @Field()
-    content: string;
+    @Prop({ type: ObjectType, required: true })
+    @Field(() => [MessageContent])
+    content: MessageContent[];
 
     @Prop()
     @Field({ nullable: true })
@@ -53,7 +77,7 @@ export class Message {
     tokens: MessageTokenUsage;
 
     @Prop([{ type: [Types.ObjectId], ref: 'File' }])
-    @Field(() => [Object])
+    @Field(() => [String])
     attachments: Types.ObjectId[];
 
     @Prop({ type: Object, default: {} })
@@ -68,8 +92,8 @@ export class Message {
     editedAt?: Date;
 
     @Prop()
-    @Field()
-    originalContent?: string;
+    @Field(() => [MessageContent])
+    originalContent?: MessageContent[];
 }
 
 @ObjectType()

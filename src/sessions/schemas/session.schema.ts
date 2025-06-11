@@ -1,9 +1,9 @@
+import { Field, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
-import { Field, ObjectType } from '@nestjs/graphql';
-import { User } from 'src/users/schemas/user.schema';
-import { DeviceInfo } from '../../auth/interfaces/device-info.interface';
+import { DeviceInfo } from '@/auth/interfaces/device-info.interface';
+import { User } from '@/users/schemas/user.schema';
 
 @Schema({ timestamps: true })
 @ObjectType()

@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, RootFilterQuery, Types } from 'mongoose';
+
 import { BranchesService } from './branches.service';
 import { CreateChatDTO } from './dto/create-chat.dto';
 import { GetManyChatsDto } from './dto/get-chat-dto';

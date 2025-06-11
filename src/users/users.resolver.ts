@@ -1,9 +1,9 @@
 import { UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 
-import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
-import { GqlAuthGuard } from 'src/auth/guards/gql-auth.guard';
-import { AccessJwtPayload } from 'src/auth/interfaces/jwt-payload.interface';
+import { CurrentUser } from '@/auth/decorators/current-user.decorator';
+import { GqlAuthGuard } from '@/auth/guards/gql-auth.guard';
+import { AccessJwtPayload } from '@/auth/interfaces/jwt-payload.interface';
 import { UpdateUserDTO } from './dto/update-user.dto';
 import { User } from './schemas/user.schema';
 import { UsersService } from './users.service';

@@ -2,6 +2,20 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+enum AIProviderId {
+  anthropic
+  google
+}
+
+type ApiKey {
+  _id: String!
+  alias: String!
+  lastRotated: DateTime
+  lastUsed: DateTime
+  lastValidated: DateTime
+  provider: String!
+}
+
 input ChangePasswordDTO {
   newPassword: String!
   oldPassword: String!
@@ -32,6 +46,12 @@ type ChatsResponse {
   total: Float!
 }
 
+input CreateApiKeyDto {
+  alias: String!
+  apiKey: String!
+  provider: AIProviderId!
+}
+
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
@@ -55,24 +75,70 @@ input GetManyChatsDto {
   search: String
 }
 
+input GetMessagesDto {
+  branchId: String!
+  fromIndex: Float = 0
+  limit: Float = 50
+  offset: Float = 0
+}
+
 input LoginDTO {
   email: String!
   password: String!
 }
 
+type Message {
+  _id: String!
+  attachments: [String!]!
+  branchId: String!
+  content: [MessageContent!]!
+  editedAt: DateTime!
+  index: Float!
+  isEdited: Boolean!
+  modelUsed: String
+  originalContent: [MessageContent!]!
+  role: String!
+  tokens: MessageTokenUsage!
+}
+
+type MessageContent {
+  id: String
+  name: String
+  text: String
+  tool_use_id: String
+  type: String!
+}
+
+type MessageTokenUsage {
+  completionTokens: Float!
+  promptTokens: Float!
+  totalTokens: Float!
+}
+
+type MessagesResponse {
+  hasMore: Boolean!
+  messages: [Message!]!
+  total: Float!
+}
+
 type Mutation {
+  addApiKey(payload: CreateApiKeyDto!): ApiKey!
+  deleteApiKey(id: String!): Boolean!
   login(payload: LoginDTO!): SessionResponse!
   logout: Boolean!
   refreshToken(refreshToken: String!): SessionResponse!
   register(payload: RegisterDto!): SessionResponse!
   revokeAllSessions: Boolean!
   revokeSession(sessionId: String!): Boolean!
+  updateApiKey(id: String!, payload: UpdateApiKeyDto!): ApiKey!
   updatePassword(payload: ChangePasswordDTO!): User!
 }
 
 type Query {
+  getApiKeys: [ApiKey!]!
   getChat(query: GetChatDto!): SingleChatResponse!
   getChatBranches(chatId: String!): [ChatBranch!]!
+  getChatMessages(query: GetMessagesDto!): MessagesResponse!
   getChats(query: GetManyChatsDto!): ChatsResponse!
   getSessions: [SessionResponse!]!
 }
@@ -93,6 +159,11 @@ type SingleChatResponse {
   branches: [ChatBranch!]!
   chat: Chat!
   totalMessages: Float!
+}
+
+input UpdateApiKeyDto {
+  alias: String
+  isActive: Boolean
 }
 
 type User {

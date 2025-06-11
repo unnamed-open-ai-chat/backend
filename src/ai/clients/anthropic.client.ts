@@ -1,0 +1,94 @@
+import Anthropic from '@anthropic-ai/sdk';
+import { MessageStreamParams } from '@anthropic-ai/sdk/resources/index';
+import { MessageParam } from '@anthropic-ai/sdk/resources/messages';
+
+import { Message } from '@/chats/schemas/message.schema';
+import {
+    AIModel,
+    AIProviderCallbacks,
+    AIProviderClient,
+    AIProviderOptions,
+} from '../interfaces/ai-provider.interface';
+
+export class AnthropicClient implements AIProviderClient {
+    async validateKeyFormat(key: string): Promise<boolean> {
+        const models = await this.getModels(key).catch(() => []);
+        return models.length > 0;
+    }
+
+    async getModels(key: string): Promise<AIModel[]> {
+        const client = new Anthropic({ apiKey: key });
+        const raws = await client.models.list();
+
+        return raws.data.map(model => ({
+            id: model.id,
+            name: model.display_name,
+            capabilities: {
+                codeExecution: false,
+                fileAnalysis: false,
+                functionCalling: false,
+                imageAnalysis: false,
+                imageGeneration: false,
+                textGeneration: true,
+                webBrowsing: false,
+            },
+        }));
+    }
+
+    async countInputTokens(
+        key: string,
+        modelId: string,
+        messages: Message[],
+        settings: AIProviderOptions
+    ): Promise<number> {
+        const client = new Anthropic({ apiKey: key });
+
+        const history: Array<MessageParam> = messages.map(message => ({
+            role: message.role,
+            content: message.content,
+        })) as Array<MessageParam>;
+
+        const params: MessageStreamParams = {
+            messages: history,
+            model: modelId,
+            max_tokens: settings.maxTokens || 1024,
+            temperature: settings.temperature,
+        };
+
+        return (await client.messages.countTokens(params)).input_tokens;
+    }
+
+    sendMessage(
+        key: string,
+        modelId: string,
+        messages: Message[],
+        settings: AIProviderOptions,
+        callbacks: AIProviderCallbacks
+    ) {
+        const client = new Anthropic({ apiKey: key });
+
+        const history: Array<MessageParam> = messages.map(message => ({
+            role: message.role,
+            content: message.content,
+        })) as Array<MessageParam>;
+
+        const params: MessageStreamParams = {
+            messages: history,
+            model: modelId,
+            max_tokens: settings.maxTokens || 1024,
+            temperature: settings.temperature,
+        };
+
+        client.messages
+            .stream(params)
+            .on('text', text => {
+                callbacks.onText(text);
+            })
+            .on('end', () => {
+                callbacks.onEnd();
+            })
+            .on('error', err => {
+                callbacks.onError(err.message);
+            });
+    }
+}

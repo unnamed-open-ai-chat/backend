@@ -1,8 +1,9 @@
 import { UnauthorizedException, UseGuards } from '@nestjs/common';
 import { Args, Query, Resolver } from '@nestjs/graphql';
-import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
-import { GqlAuthGuard } from 'src/auth/guards/gql-auth.guard';
-import { AccessJwtPayload } from 'src/auth/interfaces/jwt-payload.interface';
+
+import { CurrentUser } from '@/auth/decorators/current-user.decorator';
+import { GqlAuthGuard } from '@/auth/guards/gql-auth.guard';
+import { AccessJwtPayload } from '@/auth/interfaces/jwt-payload.interface';
 import { BranchesService } from './branches.service';
 import { ChatService } from './chats.service';
 import { GetChatDto, GetManyChatsDto } from './dto/get-chat-dto';

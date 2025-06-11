@@ -1,5 +1,6 @@
 import { Field, InputType } from '@nestjs/graphql';
 import { IsArray, IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
+
 import { MessageRole } from '../schemas/message.schema';
 
 @InputType()

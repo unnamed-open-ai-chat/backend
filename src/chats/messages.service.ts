@@ -5,11 +5,15 @@ import { Model, RootFilterQuery, Types } from 'mongoose';
 import { AddMessageDto } from './dto/add-message.dto';
 import { GetMessagesDto } from './dto/get-messages.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
+import { ChatBranch } from './schemas/chat-branch.schema';
 import { Message, MessageDocument, MessagesResponse } from './schemas/message.schema';
 
 @Injectable()
 export class MessagesService {
-    constructor(@InjectModel(Message.name) private messageModel: Model<MessageDocument>) {}
+    constructor(
+        @InjectModel(Message.name) private messageModel: Model<MessageDocument>,
+        @InjectModel(ChatBranch.name) private branchModel: Model<ChatBranch>
+    ) {}
 
     async create(messageData: AddMessageDto): Promise<MessageDocument> {
         const { branchId, content, role, attachments, modelUsed } = messageData;
@@ -93,37 +97,44 @@ export class MessagesService {
     async update(
         messageId: string,
         updateData: UpdateMessageDto,
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        _userId: string
+        userId: string
     ): Promise<Message> {
         const message = await this.findById(messageId);
 
-        // ToDo: Add permission check
-        /**
-        if (message.userId.toString() !== userId) {
-            throw new ForbiddenException('You do not have permission to update this message');
-        } */
+        // Get branch
+        const branch = await this.branchModel.findById(message.branchId.toString());
+
+        // Permission check
+        if (!branch || branch.userId.toString() !== userId) {
+            throw new NotFoundException('Message not found');
+        }
 
         if (!message.isEdited) {
             message.originalContent = message.content;
         }
 
-        message.content = updateData.content;
+        message.content = [
+            {
+                type: 'text',
+                text: updateData.content,
+            },
+        ];
         message.isEdited = true;
         message.editedAt = new Date();
 
         return await message.save();
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async delete(messageId: string, userId: string): Promise<boolean> {
         const message = await this.findById(messageId);
 
-        // ToDo: Add permission check
-        /**
-        if (message.userId.toString() !== userId) {
-            throw new ForbiddenException('You do not have permission to delete this message');
-        } */
+        // Get branch
+        const branch = await this.branchModel.findById(message.branchId.toString());
+
+        // Permission check
+        if (!branch || branch.userId.toString() !== userId) {
+            throw new NotFoundException('Message not found');
+        }
 
         await this.messageModel.findByIdAndDelete(messageId).exec();
         await this.reindexBranchMessages(message.branchId.toString());

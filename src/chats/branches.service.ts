@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+
 import { UpdateBranchDTO } from './dto/update-branch.dto';
 import { MessagesService } from './messages.service';
 import { ChatBranch, ChatBranchDocument } from './schemas/chat-branch.schema';
