@@ -10,11 +10,17 @@ export enum MessageRole {
     TOOL = 'tool',
 }
 
-export type MessageTokenUsage = {
+@ObjectType()
+export class MessageTokenUsage {
+    @Field()
     promptTokens: number;
+
+    @Field()
     completionTokens: number;
+
+    @Field()
     totalTokens: number;
-};
+}
 
 @Schema({ timestamps: true })
 @ObjectType()
@@ -43,7 +49,7 @@ export class Message {
     modelUsed?: string;
 
     @Prop({ type: Object })
-    @Field(() => Object)
+    @Field(() => MessageTokenUsage)
     tokens: MessageTokenUsage;
 
     @Prop([{ type: [Types.ObjectId], ref: 'File' }])
@@ -68,7 +74,7 @@ export class Message {
 
 @ObjectType()
 export class MessagesResponse {
-    @Field(() => Object)
+    @Field(() => [Message])
     messages: Message[];
     @Field()
     total: number;

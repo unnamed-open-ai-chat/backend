@@ -8,6 +8,9 @@ export class ChatBranch {
     @Field(() => String)
     _id: Types.ObjectId;
 
+    @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+    userId: Types.ObjectId;
+
     @Prop({ type: Types.ObjectId, ref: 'Chat', required: true })
     chatId: Types.ObjectId;
 

@@ -47,10 +47,24 @@ export const ChatSchema = SchemaFactory.createForClass(Chat);
 export class ChatsResponse {
     @Field(() => [Chat])
     chats: Chat[];
+
     @Field()
     total: number;
+
     @Field()
     hasMore: boolean;
+}
+
+@ObjectType()
+export class SingleChatResponse {
+    @Field(() => Chat)
+    chat: Chat;
+
+    @Field(() => [ChatBranch])
+    branches: ChatBranch[];
+
+    @Field()
+    totalMessages: number;
 }
 
 ChatSchema.index({ userId: 1, lastActivityAt: -1 });

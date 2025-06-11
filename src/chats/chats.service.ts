@@ -35,7 +35,7 @@ export class ChatService {
         await chat.save();
 
         // Create default branch
-        const defaultBranch = await this.branchServices.create(chat._id.toString(), 'main');
+        const defaultBranch = await this.branchServices.create(userId, chat._id.toString(), 'main');
 
         // update chat with default branch
         chat.defaultBranch = defaultBranch._id;
@@ -44,12 +44,18 @@ export class ChatService {
         return chat;
     }
 
-    async findById(chatId: string, userId?: string): Promise<ChatDocument> {
+    async findById(chatId: string, userId?: string, populate = true): Promise<ChatDocument> {
         if (!Types.ObjectId.isValid(chatId)) {
             throw new BadRequestException('Invalid chat id');
         }
 
-        const chat = await this.chatModel.findById(chatId).populate('defaultBranch').exec();
+        let operation = this.chatModel.findById(chatId);
+        if (populate) {
+            operation = operation.populate('defaultBranch');
+        }
+
+        const chat = await operation.exec();
+
         if (!chat) {
             throw new NotFoundException('Chat not found');
         }

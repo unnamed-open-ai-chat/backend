@@ -32,9 +32,4 @@ export class GetChatDto {
     @Field()
     @IsString()
     chatId: string;
-
-    @Field({ nullable: true })
-    @IsOptional()
-    @IsString()
-    branchId?: string;
 }

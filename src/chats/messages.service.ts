@@ -48,19 +48,27 @@ export class MessagesService {
         return message;
     }
 
-    async findByBranchId(branchId: string, options: GetMessagesDto): Promise<MessagesResponse> {
-        if (!Types.ObjectId.isValid(branchId)) {
+    async findByBranchId(options: GetMessagesDto, userId?: string): Promise<MessagesResponse> {
+        if (!Types.ObjectId.isValid(options.branchId)) {
             throw new BadRequestException('Invalid branch id');
+        }
+
+        if (userId && !Types.ObjectId.isValid(userId)) {
+            throw new BadRequestException('Invalid user id');
         }
 
         const { limit = 50, offset = 0, fromIndex } = options;
 
         const query: RootFilterQuery<MessageDocument> = {
-            branchId: new Types.ObjectId(branchId),
+            branchId: new Types.ObjectId(options.branchId),
         };
 
         if (fromIndex !== undefined) {
             query.index = { $gte: fromIndex };
+        }
+
+        if (userId) {
+            query.userId = new Types.ObjectId(userId);
         }
 
         const [messages, total] = await Promise.all([

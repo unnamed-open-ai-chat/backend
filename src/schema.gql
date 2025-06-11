@@ -44,6 +44,10 @@ type DeviceInfo {
   userAgent: String!
 }
 
+input GetChatDto {
+  chatId: String!
+}
+
 input GetManyChatsDto {
   archived: Boolean = false
   limit: Float = 20
@@ -67,6 +71,8 @@ type Mutation {
 }
 
 type Query {
+  getChat(query: GetChatDto!): SingleChatResponse!
+  getChatBranches(chatId: String!): [ChatBranch!]!
   getChats(query: GetManyChatsDto!): ChatsResponse!
   getSessions: [SessionResponse!]!
 }
@@ -81,6 +87,12 @@ type SessionResponse {
   accessToken: String!
   refreshToken: String!
   user: User
+}
+
+type SingleChatResponse {
+  branches: [ChatBranch!]!
+  chat: Chat!
+  totalMessages: Float!
 }
 
 type User {
