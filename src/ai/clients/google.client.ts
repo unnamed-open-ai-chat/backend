@@ -1,6 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 
-import { Message } from '@/chats/schemas/message.schema';
+import { Message, MessageRole } from '@/chats/schemas/message.schema';
 import {
     AIModel,
     AIProviderCallbacks,
@@ -56,10 +56,12 @@ export class GoogleClient implements AIProviderClient {
         const client = new GoogleGenAI({ apiKey: key });
 
         const history = messages.map(message => ({
-            role: message.role,
-            content: message.content.map(part => ({
-                text: part.text,
-            })),
+            role: message.role == MessageRole.user ? 'user' : 'model',
+            parts: message.content
+                .filter(part => part.text)
+                .map(part => ({
+                    text: part.text!,
+                })),
         }));
 
         const chat = client.chats.create({
@@ -91,15 +93,17 @@ export class GoogleClient implements AIProviderClient {
         const lastMessage = previousMessages.pop();
 
         const history = previousMessages.map(message => ({
-            role: message.role,
-            content: message.content.map(part => ({
-                text: part.text,
-            })),
+            role: message.role == MessageRole.user ? 'user' : 'model',
+            parts: message.content
+                .filter(part => part.text)
+                .map(part => ({
+                    text: part.text!,
+                })),
         }));
 
         const chat = client.chats.create({
             model: modelId,
-            history: history,
+            history,
             config: {
                 temperature: settings.temperature,
                 maxOutputTokens: settings.maxTokens,

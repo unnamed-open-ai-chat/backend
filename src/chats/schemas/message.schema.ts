@@ -3,11 +3,11 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
 export enum MessageRole {
-    SYSTEM = 'system',
-    USER = 'user',
-    ASSISTANT = 'assistant',
-    FUNCTION = 'function',
-    TOOL = 'tool',
+    system = 'system',
+    user = 'user',
+    assistant = 'assistant',
+    function = 'function',
+    tool = 'tool',
 }
 
 registerEnumType(MessageRole, {

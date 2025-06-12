@@ -102,11 +102,11 @@ export class ChatsResolver {
             content: [
                 {
                     type: 'text',
-                    text: payload.prompt,
+                    text: payload.prompt, //
                 },
             ],
             metadata: {},
-            role: MessageRole.USER,
+            role: MessageRole.user,
             tokens: 0,
         });
 
@@ -130,7 +130,7 @@ export class ChatsResolver {
 
         let completedMessage = '';
 
-        this.aiService.sendMessage(
+        await this.aiService.sendMessage(
             apiKey.provider,
             key,
             payload.modelId,
@@ -151,14 +151,16 @@ export class ChatsResolver {
                             },
                         ],
                         metadata: {},
-                        role: MessageRole.ASSISTANT,
+                        role: MessageRole.assistant,
                         tokens: 0,
                     });
                 },
-                onError: error => {
+                // eslint-disable-next-line @typescript-eslint/require-await
+                onError: async error => {
                     console.log('Chat error', error);
                 },
-                onText: text => {
+                // eslint-disable-next-line @typescript-eslint/require-await
+                onText: async text => {
                     completedMessage += text;
                     console.log('Chat chunk', text);
                 },

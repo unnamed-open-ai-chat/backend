@@ -58,13 +58,13 @@ export class AnthropicClient implements AIProviderClient {
         return (await client.messages.countTokens(params)).input_tokens;
     }
 
-    sendMessage(
+    async sendMessage(
         key: string,
         modelId: string,
         messages: Message[],
         settings: AIProviderOptions,
         callbacks: AIProviderCallbacks
-    ) {
+    ): Promise<void> {
         const client = new Anthropic({ apiKey: key });
 
         const history: Array<MessageParam> = messages.map(message => ({
@@ -79,16 +79,20 @@ export class AnthropicClient implements AIProviderClient {
             temperature: settings.temperature,
         };
 
-        client.messages
-            .stream(params)
-            .on('text', text => {
-                callbacks.onText(text);
-            })
-            .on('end', () => {
-                callbacks.onEnd();
-            })
-            .on('error', err => {
-                callbacks.onError(err.message);
-            });
+        return new Promise(resolve => {
+            client.messages
+                .stream(params)
+                .on('text', text => {
+                    callbacks.onText(text);
+                })
+                .on('end', () => {
+                    callbacks.onEnd();
+                    resolve();
+                })
+                .on('error', err => {
+                    callbacks.onError(err.message);
+                    resolve();
+                });
+        });
     }
 }

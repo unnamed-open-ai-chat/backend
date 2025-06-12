@@ -24,9 +24,9 @@ export type AIProviderOptions = {
 };
 
 export type AIProviderCallbacks = {
-    onError: (error: string) => void;
-    onText: (text: string) => void;
-    onEnd: () => void;
+    onError: (error: string) => Promise<void>;
+    onText: (text: string) => Promise<void>;
+    onEnd: () => Promise<void>;
 };
 
 export interface AIProviderClient {
@@ -47,7 +47,7 @@ export interface AIProviderClient {
         messages: Message[],
         settings: { maxTokens?: number; temperature?: number },
         callbacks: AIProviderCallbacks
-    );
+    ): Promise<unknown>;
 }
 
 export enum AIProviderId {

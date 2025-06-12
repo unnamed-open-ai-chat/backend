@@ -47,7 +47,7 @@ export class AIService {
         messages: Message[],
         settings: AIProviderOptions,
         callbacks: AIProviderCallbacks
-    ) {
+    ): Promise<unknown> {
         return this.clients[providerId].sendMessage(key, modelId, messages, settings, callbacks);
     }
 }
