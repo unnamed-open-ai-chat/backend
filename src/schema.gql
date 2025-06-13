@@ -6,11 +6,13 @@ type AIModel {
   author: String!
   capabilities: AIModelCapabilities!
   category: String
+  cost: String
   description: String
   enabled: Boolean
   id: String!
   name: String!
   provider: String!
+  speed: String
 }
 
 type AIModelCapabilities {
@@ -52,10 +54,12 @@ input ChangePasswordDTO {
 
 type Chat {
   _id: String!
+  apiKeyId: String
   archived: Boolean!
   defaultBranch: ChatBranch
   isPublic: Boolean!
   lastActivityAt: DateTime!
+  modelId: String
   pinned: Boolean!
   title: String!
 }

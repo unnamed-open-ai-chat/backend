@@ -39,6 +39,14 @@ export class Chat {
     @Prop({ default: false })
     @Field()
     pinned: boolean;
+
+    @Prop()
+    @Field({ nullable: true })
+    modelId?: string;
+
+    @Prop()
+    @Field({ nullable: true })
+    apiKeyId?: string;
 }
 
 export type ChatDocument = Chat & Document;

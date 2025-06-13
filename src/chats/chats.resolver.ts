@@ -117,7 +117,6 @@ export class ChatsResolver {
         @CurrentUser() user: AccessJwtPayload,
         @Args('payload') payload: AddMessageDto
     ) {
-        console.log(user);
         const branch = await this.branchesService.findById(payload.branchId, user.sub);
 
         // First, save the user message

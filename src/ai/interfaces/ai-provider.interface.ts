@@ -38,6 +38,10 @@ export class AIModel {
     description?: string;
     @Field({ nullable: true })
     category?: string;
+    @Field(() => String, { nullable: true })
+    cost?: AIModelPropValue;
+    @Field(() => String, { nullable: true })
+    speed?: AIModelPropValue;
 }
 
 export type AIProviderOptions = {
@@ -81,4 +85,14 @@ export enum AIProviderId {
 
 registerEnumType(AIProviderId, {
     name: 'AIProviderId',
+});
+
+export enum AIModelPropValue {
+    low = 'low',
+    medium = 'medium',
+    high = 'high',
+}
+
+registerEnumType(AIModelPropValue, {
+    name: 'AIModelPropValue',
 });

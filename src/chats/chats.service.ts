@@ -7,6 +7,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, RootFilterQuery, Types } from 'mongoose';
 
+import { ApiKeysService } from '@/keys/api-key.service';
 import { BranchesService } from './branches.service';
 import { GetManyChatsDto } from './dto/get-chat-dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
@@ -16,7 +17,8 @@ import { Chat, ChatDocument, ChatsResponse } from './schemas/chat.schema';
 export class ChatService {
     constructor(
         @InjectModel(Chat.name) private chatModel: Model<ChatDocument>,
-        private readonly branchServices: BranchesService
+        private readonly branchService: BranchesService,
+        private readonly apiKeyService: ApiKeysService
     ) {}
 
     async createChat(userId: string): Promise<ChatDocument> {
@@ -31,7 +33,7 @@ export class ChatService {
         await chat.save();
 
         // Create default branch
-        const defaultBranch = await this.branchServices.create(userId, chat, 'main');
+        const defaultBranch = await this.branchService.create(userId, chat, 'main');
 
         // update chat with default branch
         chat.defaultBranch = defaultBranch._id;
@@ -111,6 +113,12 @@ export class ChatService {
         chat.isPublic = updateData.isPublic ?? chat.isPublic;
         chat.archived = updateData.archived ?? chat.archived;
         chat.pinned = updateData.pinned ?? chat.pinned;
+        chat.modelId = updateData.modelId ?? chat.modelId;
+        chat.apiKeyId = updateData.apiKeyId ?? chat.apiKeyId;
+
+        if (updateData.apiKeyId) {
+            await this.apiKeyService.findById(updateData.apiKeyId, userId);
+        }
 
         return await chat.save();
     }
