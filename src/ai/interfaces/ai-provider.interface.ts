@@ -1,21 +1,43 @@
-import { registerEnumType } from '@nestjs/graphql';
+import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 
 import { Message } from '@/chats/schemas/message.schema';
 
-export interface AIModelCapabilities {
+@ObjectType()
+export class AIModelCapabilities {
+    @Field()
     textGeneration: boolean;
+    @Field()
     imageGeneration: boolean;
+    @Field()
     imageAnalysis: boolean;
+    @Field()
     functionCalling: boolean;
+    @Field()
     webBrowsing: boolean;
+    @Field()
     codeExecution: boolean;
+    @Field()
     fileAnalysis: boolean;
 }
 
-export interface AIModel {
+@ObjectType()
+export class AIModel {
+    @Field()
     id: string;
+    @Field()
     name: string;
+    @Field()
+    author: string;
+    @Field(() => String)
+    provider: AIProviderId;
+    @Field()
     capabilities: AIModelCapabilities;
+    @Field({ nullable: true })
+    enabled?: boolean;
+    @Field({ nullable: true })
+    description?: string;
+    @Field({ nullable: true })
+    category?: string;
 }
 
 export type AIProviderOptions = {

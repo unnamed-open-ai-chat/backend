@@ -2,6 +2,7 @@ import { UnauthorizedException, UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 
 import { AIService } from '@/ai/ai.service';
+import { AIModel } from '@/ai/interfaces/ai-provider.interface';
 import { CurrentUser } from '@/auth/decorators/current-user.decorator';
 import { GqlAuthGuard } from '@/auth/guards/gql-auth.guard';
 import { AccessJwtPayload } from '@/auth/interfaces/jwt-payload.interface';
@@ -28,6 +29,30 @@ export class ChatsResolver {
         private apiKeyService: ApiKeysService,
         private encryptionService: EncryptionService
     ) {}
+
+    @UseGuards(GqlAuthGuard)
+    @Query(() => [AIModel])
+    async getAvailableModels(
+        @CurrentUser() user: AccessJwtPayload,
+        @Args('rawDecryptKey') rawDecryptKey: string
+    ): Promise<AIModel[]> {
+        const models = new Set<AIModel>();
+
+        const apiKeys = await this.apiKeyService.findAll(user.sub);
+        for (const apiKey of apiKeys) {
+            const decryptedApiKey = this.encryptionService.decryptWithKey(
+                apiKey.encryptedApiKey,
+                rawDecryptKey
+            );
+            const apiModels = await this.aiService.getModels(apiKey.provider, decryptedApiKey);
+
+            for (const model of apiModels) {
+                models.add(model);
+            }
+        }
+
+        return Array.from(models);
+    }
 
     @UseGuards(GqlAuthGuard)
     @Query(() => ChatsResponse)

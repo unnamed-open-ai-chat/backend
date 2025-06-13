@@ -7,6 +7,7 @@ import {
     AIModel,
     AIProviderCallbacks,
     AIProviderClient,
+    AIProviderId,
     AIProviderOptions,
 } from '../interfaces/ai-provider.interface';
 
@@ -23,6 +24,8 @@ export class AnthropicClient implements AIProviderClient {
         return raws.data.map(model => ({
             id: model.id,
             name: model.display_name,
+            author: 'Anthropic',
+            provider: AIProviderId.anthropic,
             capabilities: {
                 codeExecution: false,
                 fileAnalysis: false,

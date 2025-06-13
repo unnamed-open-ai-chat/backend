@@ -5,6 +5,7 @@ import {
     AIModel,
     AIProviderCallbacks,
     AIProviderClient,
+    AIProviderId,
     AIProviderOptions,
 } from '../interfaces/ai-provider.interface';
 
@@ -30,8 +31,10 @@ export class GoogleClient implements AIProviderClient {
             }
 
             models.push({
-                id: name,
-                name: id,
+                id,
+                name,
+                author: 'Google',
+                provider: AIProviderId.google,
                 capabilities: {
                     codeExecution: false,
                     fileAnalysis: false,
