@@ -15,6 +15,7 @@ import { EncryptionModule } from './encryption/encryption.module';
 import { ApiKeysModule } from './keys/api-key.module';
 import { SessionsModule } from './sessions/sessions.module';
 import { UsersModule } from './users/users.module';
+import { WebsocketsModule } from './websockets/websockets.module';
 
 @Module({
     imports: [
@@ -82,6 +83,7 @@ import { UsersModule } from './users/users.module';
         ApiKeysModule,
         SessionsModule,
         UsersModule,
+        WebsocketsModule,
     ],
     controllers: [AppController],
     providers: [AppService],

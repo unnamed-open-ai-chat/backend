@@ -14,6 +14,7 @@ import { ChatService } from './chats.service';
 import { AddMessageDto } from './dto/add-message.dto';
 import { GetChatDto, GetManyChatsDto } from './dto/get-chat-dto';
 import { GetMessagesDto } from './dto/get-messages.dto';
+import { UpdateChatDto } from './dto/update-chat.dto';
 import { MessagesService } from './messages.service';
 import { ChatBranch } from './schemas/chat-branch.schema';
 import { Chat, ChatsResponse, SingleChatResponse } from './schemas/chat.schema';
@@ -109,6 +110,16 @@ export class ChatsResolver {
     @Mutation(() => Chat)
     async createChat(@CurrentUser() user: AccessJwtPayload) {
         return await this.chatService.createChat(user.sub);
+    }
+
+    @UseGuards(GqlAuthGuard)
+    @Mutation(() => Chat)
+    async updateChat(
+        @CurrentUser() user: AccessJwtPayload,
+        @Args('id') chatId: string,
+        @Args('payload') payload: UpdateChatDto
+    ) {
+        return await this.chatService.update(chatId, user.sub, payload);
     }
 
     @UseGuards(GqlAuthGuard)

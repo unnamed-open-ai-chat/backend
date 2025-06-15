@@ -160,6 +160,7 @@ type Mutation {
   revokeSession(sessionId: String!): Boolean!
   sendMessage(payload: AddMessageDto!): Boolean!
   updateApiKey(id: String!, payload: UpdateApiKeyDto!): ApiKey!
+  updateChat(id: String!, payload: UpdateChatDto!): Chat!
   updatePassword(payload: ChangePasswordDTO!): User!
 }
 
@@ -195,6 +196,15 @@ type SingleChatResponse {
 input UpdateApiKeyDto {
   alias: String
   isActive: Boolean
+}
+
+input UpdateChatDto {
+  apiKeyId: String
+  archived: Boolean
+  isPublic: Boolean
+  modelId: String
+  name: String
+  pinned: Boolean
 }
 
 type User {
