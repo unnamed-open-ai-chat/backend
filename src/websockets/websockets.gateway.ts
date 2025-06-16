@@ -15,7 +15,7 @@ import { Server, Socket } from 'socket.io';
 
 import { AccessJwtPayload } from '@/auth/interfaces/jwt-payload.interface';
 import { RateLimit } from './decorators/rate-limit.decorator';
-import { WebsocketService } from './websockets.service';
+import { WebsocketsService } from './websockets.service';
 
 @Injectable()
 @WebSocketGateway({
@@ -24,20 +24,20 @@ import { WebsocketService } from './websockets.service';
 })
 export class WebsocketGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
     private readonly logger = new Logger(WebsocketGateway.name);
-    private readonly connectedUsers = new Map<string, string>(); // socketId -> userId
 
     @WebSocketServer()
     server: Server;
 
     constructor(
-        private websocketService: WebsocketService,
+        private websocketService: WebsocketsService,
         private jwtService: JwtService,
         private configService: ConfigService
     ) {}
 
     afterInit(server: Server) {
-        this.logger.log('WebSocket server initialized');
+        this.websocketService.setServer(server);
         this.configureCors(server);
+        this.logger.log('WebSocket Gateway initialized');
     }
 
     private configureCors(server: Server) {
@@ -77,8 +77,7 @@ export class WebsocketGateway implements OnGatewayInit, OnGatewayConnection, OnG
             try {
                 const payload = this.validateToken(token);
 
-                // Associate socket with user
-                this.connectedUsers.set(client.id, payload.sub);
+                // Associate socket with user through service
                 this.websocketService.associateUserWithSocket(payload.sub, client.id);
 
                 // Send success message
@@ -105,51 +104,20 @@ export class WebsocketGateway implements OnGatewayInit, OnGatewayConnection, OnG
         try {
             this.logger.log(`Client disconnected: ${client.id}`);
 
-            // Get user ID if authenticated
-            const userId = this.connectedUsers.get(client.id);
-
-            // Remove from tracking
-            this.connectedUsers.delete(client.id);
-
-            // Remove from service
-            if (userId) {
-                this.websocketService.removeUserFromSocket(userId, client.id);
-            }
+            // Remove client through service (handles all cleanup)
             this.websocketService.removeClient(client.id);
         } catch (error) {
             this.logger.error(`Error handling disconnection:`, error);
         }
     }
 
-    // Listen for events
+    // ===================
+    // EVENT HANDLERS
+    // ===================
+
     @SubscribeMessage('join-branch')
     @RateLimit(10, 10) // 10 requests per 10 seconds
-    handleJoinBranch(@ConnectedSocket() client: Socket, @MessageBody() data: { branchId: string }) {
-        try {
-            if (!data.branchId) {
-                throw new Error('Branch ID is required');
-            }
-
-            const room = `branch:${data.branchId}`;
-
-            // Join the room
-            this.websocketService.joinRoom(client.id, room);
-
-            return {
-                success: true,
-                room,
-            };
-        } catch (error) {
-            this.logger.error(`Error joining branch:`, error.message);
-            return {
-                success: false,
-                error: error.message,
-            };
-        }
-    }
-
-    @SubscribeMessage('leave-branch')
-    handleLeaveBranch(
+    async handleJoinBranch(
         @ConnectedSocket() client: Socket,
         @MessageBody() data: { branchId: string }
     ) {
@@ -158,16 +126,12 @@ export class WebsocketGateway implements OnGatewayInit, OnGatewayConnection, OnG
                 throw new Error('Branch ID is required');
             }
 
-            const room = `branch:${data.branchId}`;
+            // Delegate to service
+            const result = await this.websocketService.joinBranchRoom(client.id, data.branchId);
 
-            // Leave the room
-            this.websocketService.leaveRoom(client.id, room);
-
-            return {
-                success: true,
-            };
+            return result;
         } catch (error) {
-            this.logger.error(`Error leaving branch:`, error.message);
+            this.logger.error(`Error in join-branch handler:`, error.message);
             return {
                 success: false,
                 error: error.message,
@@ -175,160 +139,51 @@ export class WebsocketGateway implements OnGatewayInit, OnGatewayConnection, OnG
         }
     }
 
-    // Method to emit auth token refresh to specific user
-    emitTokenRefresh(userId: string, newTokens: { accessToken: string; refreshToken: string }) {
-        const userSockets = this.websocketService.getUserSockets(userId);
-
-        for (const socketId of userSockets) {
-            const socket = this.websocketService.connectedClients.get(socketId);
-            if (socket) {
-                socket.emit('auth:token_refreshed', newTokens);
-                this.logger.debug(`Token refresh sent to user ${userId} on socket ${socketId}`);
+    @SubscribeMessage('leave-branch')
+    @RateLimit(10, 10)
+    async handleLeaveBranch(
+        @ConnectedSocket() client: Socket,
+        @MessageBody() data: { branchId: string }
+    ) {
+        try {
+            if (!data.branchId) {
+                throw new Error('Branch ID is required');
             }
+
+            // Delegate to service
+            const result = await this.websocketService.leaveBranchRoom(client.id, data.branchId);
+
+            return result;
+        } catch (error) {
+            this.logger.error(`Error in leave-branch handler:`, error.message);
+            return {
+                success: false,
+                error: error.message,
+            };
         }
     }
 
-    // Method to emit logout to specific user
-    emitLogout(userId: string) {
-        const userSockets = this.websocketService.getUserSockets(userId);
+    // ===================
+    // UTILITY METHODS (moved to service, kept for backward compatibility)
+    // ===================
 
-        for (const socketId of userSockets) {
-            const socket = this.websocketService.connectedClients.get(socketId);
-            if (socket) {
-                socket.emit('auth:logout');
-                this.logger.debug(`Logout signal sent to user ${userId} on socket ${socketId}`);
-                // Disconnect the socket after logout
-                socket.disconnect();
-            }
-        }
+    /**
+     * @deprecated Use websocketService.getConnectedUserCount() instead
+     */
+    getConnectedUserCount(): number {
+        return this.websocketService.getConnectedUserCount();
     }
 
-    // Method to emit chat events to specific user
-    emitChatCreated(userId: string, chat: any) {
-        const userSockets = this.websocketService.getUserSockets(userId);
-
-        for (const socketId of userSockets) {
-            const socket = this.websocketService.connectedClients.get(socketId);
-            if (socket) {
-                socket.emit('chat:created', chat);
-                this.logger.debug(
-                    `Chat created event sent to user ${userId} on socket ${socketId}`
-                );
-            }
-        }
+    /**
+     * @deprecated Use websocketService.isUserConnected() instead
+     */
+    isUserConnected(userId: string): boolean {
+        return this.websocketService.isUserConnected(userId);
     }
 
-    emitChatUpdated(userId: string, chat: any) {
-        const userSockets = this.websocketService.getUserSockets(userId);
-
-        for (const socketId of userSockets) {
-            const socket = this.websocketService.connectedClients.get(socketId);
-            if (socket) {
-                socket.emit('chat:updated', chat);
-                this.logger.debug(
-                    `Chat updated event sent to user ${userId} on socket ${socketId}`
-                );
-            }
-        }
-    }
-
-    emitChatDeleted(userId: string, chatId: string) {
-        const userSockets = this.websocketService.getUserSockets(userId);
-
-        for (const socketId of userSockets) {
-            const socket = this.websocketService.connectedClients.get(socketId);
-            if (socket) {
-                socket.emit('chat:deleted', chatId);
-                this.logger.debug(
-                    `Chat deleted event sent to user ${userId} on socket ${socketId}`
-                );
-            }
-        }
-    }
-
-    // Method to emit message events to specific user
-    emitNewMessage(userId: string, message: any) {
-        const userSockets = this.websocketService.getUserSockets(userId);
-
-        for (const socketId of userSockets) {
-            const socket = this.websocketService.connectedClients.get(socketId);
-            if (socket) {
-                socket.emit('message:new', message);
-                this.logger.debug(`New message event sent to user ${userId} on socket ${socketId}`);
-            }
-        }
-    }
-
-    emitMessageUpdated(userId: string, message: any) {
-        const userSockets = this.websocketService.getUserSockets(userId);
-
-        for (const socketId of userSockets) {
-            const socket = this.websocketService.connectedClients.get(socketId);
-            if (socket) {
-                socket.emit('message:updated', message);
-                this.logger.debug(
-                    `Message updated event sent to user ${userId} on socket ${socketId}`
-                );
-            }
-        }
-    }
-
-    emitMessageDeleted(userId: string, messageId: string) {
-        const userSockets = this.websocketService.getUserSockets(userId);
-
-        for (const socketId of userSockets) {
-            const socket = this.websocketService.connectedClients.get(socketId);
-            if (socket) {
-                socket.emit('message:deleted', messageId);
-                this.logger.debug(
-                    `Message deleted event sent to user ${userId} on socket ${socketId}`
-                );
-            }
-        }
-    }
-
-    // Method to emit API key events to specific user
-    emitApiKeyAdded(userId: string, apiKey: any) {
-        const userSockets = this.websocketService.getUserSockets(userId);
-
-        for (const socketId of userSockets) {
-            const socket = this.websocketService.connectedClients.get(socketId);
-            if (socket) {
-                socket.emit('apikey:added', apiKey);
-                this.logger.debug(
-                    `API key added event sent to user ${userId} on socket ${socketId}`
-                );
-            }
-        }
-    }
-
-    emitApiKeyUpdated(userId: string, apiKey: any) {
-        const userSockets = this.websocketService.getUserSockets(userId);
-
-        for (const socketId of userSockets) {
-            const socket = this.websocketService.connectedClients.get(socketId);
-            if (socket) {
-                socket.emit('apikey:updated', apiKey);
-                this.logger.debug(
-                    `API key updated event sent to user ${userId} on socket ${socketId}`
-                );
-            }
-        }
-    }
-
-    emitApiKeyDeleted(userId: string, apiKeyId: string) {
-        const userSockets = this.websocketService.getUserSockets(userId);
-
-        for (const socketId of userSockets) {
-            const socket = this.websocketService.connectedClients.get(socketId);
-            if (socket) {
-                socket.emit('apikey:deleted', apiKeyId);
-                this.logger.debug(
-                    `API key deleted event sent to user ${userId} on socket ${socketId}`
-                );
-            }
-        }
-    }
+    // ===================
+    // PRIVATE METHODS
+    // ===================
 
     private extractTokenFromHandshake(client: Socket): string | null {
         // Try to get token from handshake auth
@@ -366,15 +221,5 @@ export class WebsocketGateway implements OnGatewayInit, OnGatewayConnection, OnG
         } catch {
             throw new UnauthorizedException('Invalid token');
         }
-    }
-
-    // Utility method to get connected user count
-    getConnectedUserCount(): number {
-        return this.connectedUsers.size;
-    }
-
-    // Utility method to check if user is connected
-    isUserConnected(userId: string): boolean {
-        return Array.from(this.connectedUsers.values()).includes(userId);
     }
 }

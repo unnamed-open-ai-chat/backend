@@ -26,6 +26,7 @@ export class AnthropicClient implements AIProviderClient {
             name: model.display_name,
             author: 'Anthropic',
             provider: AIProviderId.anthropic,
+            enabled: true,
             capabilities: {
                 codeExecution: false,
                 fileAnalysis: false,

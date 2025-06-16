@@ -40,6 +40,10 @@ export class Message {
     @Field(() => String)
     _id: Types.ObjectId;
 
+    @Prop({ types: Types.ObjectId, ref: 'Chat', required: true })
+    @Field(() => String)
+    chatId: Types.ObjectId;
+
     @Prop({ types: Types.ObjectId, ref: 'ChatBranch', required: true })
     @Field(() => String)
     branchId: Types.ObjectId;
@@ -100,8 +104,10 @@ export class MessagesResponse {
 export type MessageDocument = Message & Document;
 export const MessageSchema = SchemaFactory.createForClass(Message);
 
-MessageSchema.index({ branchId: 1, index: 1 }, { unique: true });
-MessageSchema.index({ branchId: 1, createdAt: 1 });
+MessageSchema.index({ chatId: 1, createdAt: -1 });
+MessageSchema.index({ chatId: 1, index: 1 }, { unique: true });
+MessageSchema.index({ chatId: 1, index: 1 }, { unique: true });
+MessageSchema.index({ chatId: 1, createdAt: 1 });
 MessageSchema.index({ content: 'text' });
 MessageSchema.index({ role: 1 });
 MessageSchema.index({ attachments: 1 });

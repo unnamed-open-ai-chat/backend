@@ -1,3 +1,4 @@
+import { WebsocketsService } from '@/websockets/websockets.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -7,7 +8,8 @@ import { PreferencesDocument, UserPreferences } from './schema/user-preference.s
 @Injectable()
 export class PreferencesService {
     constructor(
-        @InjectModel(UserPreferences.name) private preferencesModel: Model<PreferencesDocument>
+        @InjectModel(UserPreferences.name) private preferencesModel: Model<PreferencesDocument>,
+        private readonly websocketsService: WebsocketsService
     ) {}
 
     async createForUser(userId: string): Promise<PreferencesDocument> {
@@ -29,6 +31,7 @@ export class PreferencesService {
     ): Promise<PreferencesDocument> {
         const preferences = await this.findByUserId(userId);
         Object.assign(preferences, updateData);
+        this.websocketsService.emitPreferencesUpdated(userId, preferences);
         return preferences.save();
     }
 

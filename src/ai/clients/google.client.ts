@@ -35,6 +35,7 @@ export class GoogleClient implements AIProviderClient {
                 name,
                 author: 'Google',
                 provider: AIProviderId.google,
+                enabled: true,
                 capabilities: {
                     codeExecution: false,
                     fileAnalysis: false,
@@ -131,13 +132,19 @@ export class GoogleClient implements AIProviderClient {
                     continue;
                 }
 
-                callbacks.onText(chunk.text);
+                callbacks.onText(chunk.text).catch(error => {
+                    console.error('Error in onText callback:', error);
+                });
             }
 
-            callbacks.onEnd();
+            callbacks.onEnd().catch(error => {
+                console.error('Error in onEnd callback:', error);
+            });
         } catch (error) {
             const message = (error.message as string) || 'Unknown error';
-            callbacks.onError(message);
+            callbacks.onError(message).catch(err => {
+                console.error('Error in onError callback:', err);
+            });
         }
     }
 }

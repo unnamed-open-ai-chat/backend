@@ -147,6 +147,10 @@ export class MessagesService {
         await this.messageModel.deleteMany({ branchId: new Types.ObjectId(branchId) }).exec();
     }
 
+    async deleteAllByChatId(chatId: string) {
+        await this.messageModel.deleteMany({ chatId: new Types.ObjectId(chatId) }).exec();
+    }
+
     async reindexBranchMessages(branchId: string) {
         const messages = await this.messageModel
             .find({ branchId: new Types.ObjectId(branchId) })

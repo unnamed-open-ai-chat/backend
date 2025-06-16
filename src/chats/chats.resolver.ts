@@ -11,7 +11,7 @@ import { EncryptionService } from '@/encryption/encryption.service';
 import { ApiKeysService } from '@/keys/api-key.service';
 import { MessagesService } from '@/messages/messages.service';
 import { Types } from 'mongoose';
-import { MessageRole } from '../messages/schemas/message.schema';
+import { Message, MessageRole } from '../messages/schemas/message.schema';
 import { ChatService } from './chats.service';
 import { AddMessageDto } from './dto/add-message.dto';
 import { GetChatDto, GetManyChatsDto } from './dto/get-chat-dto';
@@ -35,7 +35,7 @@ export class ChatsResolver {
         @CurrentUser() user: AccessJwtPayload,
         @Args('rawDecryptKey') rawDecryptKey: string
     ): Promise<AIModel[]> {
-        const models = new Set<AIModel>();
+        const models = new Map<string, AIModel>();
 
         const apiKeys = await this.apiKeyService.findAll(user.sub);
         for (const apiKey of apiKeys) {
@@ -46,11 +46,11 @@ export class ChatsResolver {
             const apiModels = await this.aiService.getModels(apiKey.provider, decryptedApiKey);
 
             for (const model of apiModels) {
-                models.add(model);
+                models.set(model.id, model);
             }
         }
 
-        return Array.from(models);
+        return Array.from(models.values());
     }
 
     @UseGuards(GqlAuthGuard)
@@ -99,7 +99,7 @@ export class ChatsResolver {
     }
 
     @UseGuards(GqlAuthGuard)
-    @Mutation(() => Boolean)
+    @Mutation(() => Message)
     async sendMessage(
         @CurrentUser() user: AccessJwtPayload,
         @Args('payload') payload: AddMessageDto
@@ -107,9 +107,10 @@ export class ChatsResolver {
         const branch = await this.branchesService.findById(payload.branchId, user.sub);
 
         // First, save the user message
-        await this.messagesService.create({
+        const userMessage = await this.messagesService.create({
             attachments: [],
             branchId: new Types.ObjectId(payload.branchId),
+            chatId: branch.chatId,
             content: [
                 {
                     type: 'text',
@@ -155,6 +156,7 @@ export class ChatsResolver {
                     await this.messagesService.create({
                         attachments: [],
                         branchId: new Types.ObjectId(payload.branchId),
+                        chatId: branch.chatId,
                         content: [
                             {
                                 type: 'text',
@@ -178,6 +180,6 @@ export class ChatsResolver {
             }
         );
 
-        return true;
+        return userMessage;
     }
 }

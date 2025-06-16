@@ -26,4 +26,12 @@ export class PreferencesResolver {
     ): Promise<UserPreferences> {
         return await this.userPreferencesService.updatePreferences(user.sub, payload);
     }
+
+    @UseGuards(GqlAuthGuard)
+    @Mutation(() => UserPreferences)
+    async createPreferences(
+        @CurrentUser() user: AccessJwtPayload
+    ): Promise<UserPreferences | null> {
+        return await this.userPreferencesService.createForUser(user.sub);
+    }
 }

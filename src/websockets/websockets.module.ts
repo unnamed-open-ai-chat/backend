@@ -3,7 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 
 import { WebsocketGateway } from './websockets.gateway';
-import { WebsocketService } from './websockets.service';
+import { WebsocketsService } from './websockets.service';
 
 @Module({
     imports: [
@@ -19,7 +19,7 @@ import { WebsocketService } from './websockets.service';
             }),
         }),
     ],
-    providers: [WebsocketGateway, WebsocketService],
-    exports: [WebsocketService],
+    providers: [WebsocketGateway, WebsocketsService],
+    exports: [WebsocketsService],
 })
 export class WebsocketsModule {}

@@ -118,7 +118,7 @@ export class BranchesService {
         return branch.messageCount;
     }
 
-    async deleteAllByChatId(chatId: string, userId: string): Promise<void> {
+    async deleteAllByChatId(chatId: string, userId: string): Promise<ChatBranch[]> {
         if (!userId) {
             throw new BadRequestException('User id is required');
         }
@@ -128,5 +128,7 @@ export class BranchesService {
         for (const branch of branches) {
             await this.delete(branch._id.toString());
         }
+
+        return branches;
     }
 }

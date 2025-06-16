@@ -124,6 +124,7 @@ type Message {
   _id: String!
   attachments: [String!]!
   branchId: String!
+  chatId: String!
   content: [MessageContent!]!
   createdAt: DateTime!
   editedAt: DateTime
@@ -152,6 +153,7 @@ type MessagesResponse {
 type Mutation {
   addApiKey(payload: CreateApiKeyDto!): ApiKey!
   createChat: Chat!
+  createPreferences: UserPreferences!
   deleteApiKey(id: String!): Boolean!
   login(payload: LoginDto!): SessionResponse!
   logout: Boolean!
@@ -159,7 +161,7 @@ type Mutation {
   register(payload: RegisterDto!): SessionResponse!
   revokeAllSessions: Boolean!
   revokeSession(sessionId: String!): Boolean!
-  sendMessage(payload: AddMessageDto!): Boolean!
+  sendMessage(payload: AddMessageDto!): Message!
   updateApiKey(id: String!, payload: UpdateApiKeyDto!): ApiKey!
   updateChat(id: String!, payload: UpdateChatDto!): Chat!
   updatePassword(payload: ChangePasswordDto!): User!

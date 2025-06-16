@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
 import { PreferencesService } from '@/preferences/preferences.service';
+import { WebsocketsService } from '@/websockets/websockets.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User, UserDocument } from './schemas/user.schema';
 
@@ -11,7 +12,8 @@ export class UsersService {
     constructor(
         @InjectModel(User.name)
         private userModel: Model<UserDocument>,
-        private readonly preferencesService: PreferencesService
+        private readonly preferencesService: PreferencesService,
+        private readonly websocketsService: WebsocketsService
     ) {}
 
     async create(
@@ -69,6 +71,7 @@ export class UsersService {
             throw new NotFoundException('User not found');
         }
 
+        this.websocketsService.emitUserUpdated(userId, user);
         return user;
     }
 

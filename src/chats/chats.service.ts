@@ -9,6 +9,8 @@ import { Model, RootFilterQuery, Types } from 'mongoose';
 
 import { BranchesService } from '@/branches/branches.service';
 import { ApiKeysService } from '@/keys/api-key.service';
+import { MessagesService } from '@/messages/messages.service';
+import { WebsocketsService } from '@/websockets/websockets.service';
 import { GetManyChatsDto } from './dto/get-chat-dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
 import { Chat, ChatDocument, ChatsResponse } from './schemas/chat.schema';
@@ -17,8 +19,10 @@ import { Chat, ChatDocument, ChatsResponse } from './schemas/chat.schema';
 export class ChatService {
     constructor(
         @InjectModel(Chat.name) private chatModel: Model<ChatDocument>,
+        private readonly messagesService: MessagesService,
         private readonly branchService: BranchesService,
-        private readonly apiKeyService: ApiKeysService
+        private readonly apiKeyService: ApiKeysService,
+        private readonly websocketsService: WebsocketsService
     ) {}
 
     async createChat(userId: string): Promise<ChatDocument> {
@@ -39,7 +43,9 @@ export class ChatService {
         chat.defaultBranch = defaultBranch._id;
         await chat.save();
 
-        return await chat.populate('defaultBranch');
+        const populated = await chat.populate('defaultBranch');
+        this.websocketsService.emitChatCreated(userId, populated);
+        return populated;
     }
 
     async findById(chatId: string, userId?: string, populate = true): Promise<ChatDocument> {
@@ -120,10 +126,26 @@ export class ChatService {
             await this.apiKeyService.findById(updateData.apiKeyId, userId);
         }
 
-        return await chat.save();
+        const saved = await chat.save();
+        await saved.populate('defaultBranch');
+        this.websocketsService.emitChatUpdated(userId, saved);
+        return saved;
     }
 
     async updateLastActivity(chatId: string): Promise<void> {
         await this.chatModel.findByIdAndUpdate(chatId, { lastActivityAt: new Date() }).exec();
+    }
+
+    async delete(chatId: string, userId: string): Promise<void> {
+        const chat = await this.findById(chatId, userId);
+
+        if (chat.userId.toString() !== userId) {
+            throw new ForbiddenException('You do not have permission to delete this chat');
+        }
+
+        await this.chatModel.deleteOne({ _id: chatId }).exec();
+        await this.branchService.deleteAllByChatId(chatId, userId);
+        await this.messagesService.deleteAllByChatId(chatId);
+        this.websocketsService.emitChatDeleted(userId, chatId);
     }
 }
