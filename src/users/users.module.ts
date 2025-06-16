@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
-import { UserPreferencesModule } from '@/users-preferences/users-preferences.module';
+import { PreferencesModule } from '@/preferences/preferences.module';
 import { User, UserSchema } from './schemas/user.schema';
 import { UsersResolver } from './users.resolver';
 import { UsersService } from './users.service';
@@ -14,7 +14,7 @@ import { UsersService } from './users.service';
                 schema: UserSchema,
             },
         ]),
-        UserPreferencesModule,
+        PreferencesModule,
     ],
     providers: [UsersService, UsersResolver],
     exports: [UsersService],

@@ -1,8 +1,9 @@
-import { UserPreferences } from '@/users-preferences/schema/user-preference.schema';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
 import { Document, Types } from 'mongoose';
+
+import { UserPreferences } from '@/preferences/schema/user-preference.schema';
 
 @Schema({ timestamps: true })
 @ObjectType()
