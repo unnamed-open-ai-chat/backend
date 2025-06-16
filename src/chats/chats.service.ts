@@ -7,8 +7,8 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, RootFilterQuery, Types } from 'mongoose';
 
+import { BranchesService } from '@/branches/branches.service';
 import { ApiKeysService } from '@/keys/api-key.service';
-import { BranchesService } from './branches.service';
 import { GetManyChatsDto } from './dto/get-chat-dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
 import { Chat, ChatDocument, ChatsResponse } from './schemas/chat.schema';

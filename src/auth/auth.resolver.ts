@@ -5,8 +5,8 @@ import { SessionResponse } from 'src/sessions/schemas/session.schema';
 import { User } from 'src/users/schemas/user.schema';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
-import { ChangePasswordDTO } from './dto/change-password.dto';
-import { LoginDTO } from './dto/login.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { GqlAuthGuard } from './guards/gql-auth.guard';
 import { AccessJwtPayload } from './interfaces/jwt-payload.interface';
@@ -27,7 +27,7 @@ export class AuthResolver {
 
     @Mutation(() => SessionResponse)
     async login(
-        @Args('payload') payload: LoginDTO,
+        @Args('payload') payload: LoginDto,
         @Context() context: any
     ): Promise<SessionResponse> {
         const req = context.req;
@@ -40,7 +40,7 @@ export class AuthResolver {
     @Mutation(() => User)
     async updatePassword(
         @CurrentUser() user: AccessJwtPayload,
-        @Args('payload') payload: ChangePasswordDTO
+        @Args('payload') payload: ChangePasswordDto
     ): Promise<User> {
         return await this.authService.updatePassword(user.sub, payload);
     }

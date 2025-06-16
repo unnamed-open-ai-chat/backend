@@ -1,3 +1,4 @@
+import { UserPreferences } from '@/users-preferences/schema/user-preference.schema';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
@@ -37,6 +38,10 @@ export class User {
 
     @Prop({ required: true, default: true })
     isActive: boolean;
+
+    @Prop({ types: Types.ObjectId, ref: 'UserPreferences' })
+    @Field(() => UserPreferences, { nullable: true })
+    preferences: Types.ObjectId;
 
     @Field()
     createdAt: Date;

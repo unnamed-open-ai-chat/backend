@@ -2,9 +2,9 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, RootFilterQuery, Types } from 'mongoose';
 
+import { ChatBranch } from '@/branches/schemas/chat-branch.schema';
 import { GetMessagesDto } from './dto/get-messages.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
-import { ChatBranch } from './schemas/chat-branch.schema';
 import { Message, MessageDocument, MessagesResponse } from './schemas/message.schema';
 
 @Injectable()

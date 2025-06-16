@@ -2,7 +2,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
-import { ChatBranch } from './chat-branch.schema';
+import { ChatBranch } from '@/branches/schemas/chat-branch.schema';
 
 @Schema({ timestamps: true })
 @ObjectType()

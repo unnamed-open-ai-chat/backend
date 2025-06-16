@@ -2,7 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { MessageStreamParams } from '@anthropic-ai/sdk/resources/index';
 import { MessageParam } from '@anthropic-ai/sdk/resources/messages';
 
-import { Message } from '@/chats/schemas/message.schema';
+import { Message } from '@/messages/schemas/message.schema';
 import {
     AIModel,
     AIProviderCallbacks,

@@ -2,10 +2,10 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 
-import { UpdateBranchDTO } from './dto/update-branch.dto';
-import { MessagesService } from './messages.service';
+import { Chat } from '@/chats/schemas/chat.schema';
+import { MessagesService } from '@/messages/messages.service';
+import { UpdateBranchDto } from './dto/update-branch.dto';
 import { ChatBranch, ChatBranchDocument } from './schemas/chat-branch.schema';
-import { Chat } from './schemas/chat.schema';
 
 @Injectable()
 export class BranchesService {
@@ -81,7 +81,7 @@ export class BranchesService {
     async update(
         branchId: string,
         userId: string,
-        updateData: UpdateBranchDTO
+        updateData: UpdateBranchDto
     ): Promise<ChatBranchDocument> {
         if (!userId) {
             throw new BadRequestException('User id is required');

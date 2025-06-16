@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { Message } from '@/chats/schemas/message.schema';
+import { Message } from '@/messages/schemas/message.schema';
 import { AnthropicClient } from './clients/anthropic.client';
 import { GoogleClient } from './clients/google.client';
 import {

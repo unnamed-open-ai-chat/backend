@@ -1,6 +1,6 @@
 import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 
-import { Message } from '@/chats/schemas/message.schema';
+import { Message } from '@/messages/schemas/message.schema';
 
 @ObjectType()
 export class AIModelCapabilities {

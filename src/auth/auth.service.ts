@@ -8,8 +8,8 @@ import { UsersService } from 'src/users/users.service';
 import { SessionResponse } from '../sessions/schemas/session.schema';
 import { SessionsService } from '../sessions/sessions.service';
 import { comparePassword, User } from '../users/schemas/user.schema';
-import { ChangePasswordDTO } from './dto/change-password.dto';
-import { LoginDTO } from './dto/login.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { DeviceInfo } from './interfaces/device-info.interface';
 import { AccessJwtPayload } from './interfaces/jwt-payload.interface';
@@ -50,7 +50,7 @@ export class AuthService {
         return this.createUserSession(user, deviceInfo, decryptKey);
     }
 
-    async login(loginDto: LoginDTO, deviceInfo: DeviceInfo): Promise<SessionResponse> {
+    async login(loginDto: LoginDto, deviceInfo: DeviceInfo): Promise<SessionResponse> {
         const { email, password } = loginDto;
 
         // Check if user exists
@@ -125,7 +125,7 @@ export class AuthService {
 
     async updatePassword(
         userId: string,
-        { oldPassword, newPassword }: ChangePasswordDTO
+        { oldPassword, newPassword }: ChangePasswordDto
     ): Promise<User> {
         const user = await this.usersService.findById(userId);
         const matchPassword = await comparePassword(oldPassword, user.password);

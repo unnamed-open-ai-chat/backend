@@ -4,7 +4,7 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '@/auth/decorators/current-user.decorator';
 import { GqlAuthGuard } from '@/auth/guards/gql-auth.guard';
 import { AccessJwtPayload } from '@/auth/interfaces/jwt-payload.interface';
-import { UpdateUserDTO } from './dto/update-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './schemas/user.schema';
 import { UsersService } from './users.service';
 
@@ -19,11 +19,11 @@ export class UsersResolver {
     }
 
     @UseGuards(GqlAuthGuard)
-    @Mutation(() => String)
-    async updateProfile(
+    @Mutation(() => User)
+    async updateUser(
         @CurrentUser() user: AccessJwtPayload,
-        @Args('payload') payload: UpdateUserDTO
-    ): Promise<any> {
-        return await this.usersService.updateProfile(user.sub, payload);
+        @Args('payload') payload: UpdateUserDto
+    ): Promise<User> {
+        return await this.usersService.updateUser(user.sub, payload);
     }
 }

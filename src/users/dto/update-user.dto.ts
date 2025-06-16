@@ -2,7 +2,7 @@ import { Field, InputType } from '@nestjs/graphql';
 import { IsEmail, IsString, MaxLength, MinLength } from 'class-validator';
 
 @InputType()
-export class UpdateUserDTO {
+export class UpdateUserDto {
     @Field({ nullable: true })
     @IsEmail({}, { message: 'Email is not valid' })
     email?: string;

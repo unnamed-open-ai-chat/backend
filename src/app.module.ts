@@ -1,21 +1,25 @@
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import { MongooseModule } from '@nestjs/mongoose';
 import * as path from 'path';
 
-import { BullModule } from '@nestjs/bull';
 import { AIModule } from './ai/ai.module';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { BranchesModule } from './branches/branches.module';
 import { ChatsModule } from './chats/chats.module';
 import { EncryptionModule } from './encryption/encryption.module';
 import { ApiKeysModule } from './keys/api-key.module';
+import { MessagesModule } from './messages/messages.module';
+import { PreferencesModule } from './preferences/preferences.module';
 import { SessionsModule } from './sessions/sessions.module';
 import { UsersModule } from './users/users.module';
 import { WebsocketsModule } from './websockets/websockets.module';
+
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 @Module({
     imports: [
@@ -77,12 +81,15 @@ import { WebsocketsModule } from './websockets/websockets.module';
 
         // Feature Modules
         AIModule,
+        ApiKeysModule,
         AuthModule,
+        BranchesModule,
         ChatsModule,
         EncryptionModule,
-        ApiKeysModule,
+        MessagesModule,
         SessionsModule,
         UsersModule,
+        PreferencesModule,
         WebsocketsModule,
     ],
     controllers: [AppController],

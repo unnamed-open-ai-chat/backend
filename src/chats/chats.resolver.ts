@@ -1,4 +1,4 @@
-import { UnauthorizedException, UseGuards } from '@nestjs/common';
+import { UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 
 import { AIService } from '@/ai/ai.service';
@@ -6,19 +6,17 @@ import { AIModel } from '@/ai/interfaces/ai-provider.interface';
 import { CurrentUser } from '@/auth/decorators/current-user.decorator';
 import { GqlAuthGuard } from '@/auth/guards/gql-auth.guard';
 import { AccessJwtPayload } from '@/auth/interfaces/jwt-payload.interface';
+import { BranchesService } from '@/branches/branches.service';
 import { EncryptionService } from '@/encryption/encryption.service';
 import { ApiKeysService } from '@/keys/api-key.service';
+import { MessagesService } from '@/messages/messages.service';
 import { Types } from 'mongoose';
-import { BranchesService } from './branches.service';
+import { MessageRole } from '../messages/schemas/message.schema';
 import { ChatService } from './chats.service';
 import { AddMessageDto } from './dto/add-message.dto';
 import { GetChatDto, GetManyChatsDto } from './dto/get-chat-dto';
-import { GetMessagesDto } from './dto/get-messages.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
-import { MessagesService } from './messages.service';
-import { ChatBranch } from './schemas/chat-branch.schema';
 import { Chat, ChatsResponse, SingleChatResponse } from './schemas/chat.schema';
-import { MessageRole, MessagesResponse } from './schemas/message.schema';
 
 @Resolver(() => Chat)
 export class ChatsResolver {
@@ -82,28 +80,6 @@ export class ChatsResolver {
             branches,
             totalMessages,
         };
-    }
-
-    @UseGuards(GqlAuthGuard)
-    @Query(() => [ChatBranch])
-    async getChatBranches(
-        @CurrentUser() user: AccessJwtPayload,
-        @Args('chatId') chatId: string
-    ): Promise<ChatBranch[]> {
-        return await this.branchesService.findByChatId(chatId, user.sub);
-    }
-
-    @UseGuards(GqlAuthGuard)
-    @Query(() => MessagesResponse)
-    async getChatMessages(
-        @CurrentUser() user: AccessJwtPayload,
-        @Args('query') queryOptions: GetMessagesDto
-    ): Promise<MessagesResponse> {
-        if (!user?.sub) {
-            throw new UnauthorizedException("User doesn't exist");
-        }
-
-        return await this.messagesService.findByBranchId(queryOptions, user.sub);
     }
 
     @UseGuards(GqlAuthGuard)

@@ -1,6 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 
-import { Message, MessageRole } from '@/chats/schemas/message.schema';
+import { Message, MessageRole } from '@/messages/schemas/message.schema';
 import {
     AIModel,
     AIProviderCallbacks,

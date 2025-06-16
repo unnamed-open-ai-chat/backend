@@ -82,6 +82,9 @@ export class Message {
     @Prop()
     @Field(() => [MessageContent], { nullable: true })
     originalContent?: MessageContent[];
+
+    @Field()
+    createdAt?: Date;
 }
 
 @ObjectType()

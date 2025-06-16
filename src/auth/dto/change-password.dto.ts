@@ -2,7 +2,7 @@ import { Field, InputType } from '@nestjs/graphql';
 import { IsString, Matches, MinLength } from 'class-validator';
 
 @InputType()
-export class ChangePasswordDTO {
+export class ChangePasswordDto {
     @Field()
     @IsString()
     @MinLength(8, { message: 'Old password must be at least 8 characters' })
