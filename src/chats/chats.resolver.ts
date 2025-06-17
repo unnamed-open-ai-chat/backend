@@ -109,20 +109,23 @@ export class ChatsResolver {
         const branch = await this.branchesService.findById(payload.branchId, user.sub);
 
         // First, save the user message
-        const userMessage = await this.messagesService.create({
-            attachments: [],
-            branchId: new Types.ObjectId(payload.branchId),
-            chatId: branch.chatId,
-            content: [
-                {
-                    type: 'text',
-                    text: payload.prompt,
-                },
-            ],
-            metadata: {},
-            role: MessageRole.user,
-            tokens: 0,
-        });
+        const userMessage = await this.messagesService.create(
+            {
+                attachments: [],
+                branchId: new Types.ObjectId(payload.branchId),
+                chatId: branch.chatId,
+                content: [
+                    {
+                        type: 'text',
+                        text: payload.prompt,
+                    },
+                ],
+                metadata: {},
+                role: MessageRole.user,
+                tokens: 0,
+            },
+            user.sub
+        );
 
         // Update branch and chat message counts
         await this.branchesService.incrementMessageCount(payload.branchId);
@@ -158,20 +161,23 @@ export class ChatsResolver {
                         console.log('Chat ended');
 
                         // Save AI message
-                        const message = await this.messagesService.create({
-                            attachments: [],
-                            branchId: new Types.ObjectId(payload.branchId),
-                            chatId: branch.chatId,
-                            content: [
-                                {
-                                    type: 'text',
-                                    text: completedMessage,
-                                },
-                            ],
-                            metadata: {},
-                            role: MessageRole.assistant,
-                            tokens: 0,
-                        });
+                        const message = await this.messagesService.create(
+                            {
+                                attachments: [],
+                                branchId: new Types.ObjectId(payload.branchId),
+                                chatId: branch.chatId,
+                                content: [
+                                    {
+                                        type: 'text',
+                                        text: completedMessage,
+                                    },
+                                ],
+                                metadata: {},
+                                role: MessageRole.assistant,
+                                tokens: 0,
+                            },
+                            user.sub
+                        );
 
                         this.websocketsService.emitToBranch(
                             user.sub,

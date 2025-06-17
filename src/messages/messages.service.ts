@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, RootFilterQuery, Types } from 'mongoose';
 
 import { ChatBranch } from '@/branches/schemas/chat-branch.schema';
+import { WebsocketsService } from '@/websockets/websockets.service';
 import { GetMessagesDto } from './dto/get-messages.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { Message, MessageDocument, MessagesResponse } from './schemas/message.schema';
@@ -11,11 +12,13 @@ import { Message, MessageDocument, MessagesResponse } from './schemas/message.sc
 export class MessagesService {
     constructor(
         @InjectModel(Message.name) private messageModel: Model<MessageDocument>,
-        @InjectModel(ChatBranch.name) private branchModel: Model<ChatBranch>
+        @InjectModel(ChatBranch.name) private branchModel: Model<ChatBranch>,
+        private websocketsService: WebsocketsService
     ) {}
 
     async create(
-        messageData: Omit<Message, '_id' | 'originalContent' | 'index' | 'isEdited' | 'editedAt'>
+        messageData: Omit<Message, '_id' | 'originalContent' | 'index' | 'isEdited' | 'editedAt'>,
+        userId?: string
     ): Promise<MessageDocument> {
         const { branchId, chatId, content, role, attachments, modelUsed, tokens } = messageData;
 
@@ -38,6 +41,15 @@ export class MessagesService {
             tokens,
             isEdited: false,
         });
+
+        if (userId) {
+            this.websocketsService.emitToBranch(
+                userId,
+                branchId.toString(),
+                'message:new',
+                message
+            );
+        }
 
         return await message.save();
     }
