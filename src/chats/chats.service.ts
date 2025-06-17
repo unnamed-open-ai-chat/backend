@@ -119,12 +119,6 @@ export class ChatService {
         chat.isPublic = updateData.isPublic ?? chat.isPublic;
         chat.archived = updateData.archived ?? chat.archived;
         chat.pinned = updateData.pinned ?? chat.pinned;
-        chat.modelId = updateData.modelId ?? chat.modelId;
-        chat.apiKeyId = updateData.apiKeyId ?? chat.apiKeyId;
-
-        if (updateData.apiKeyId) {
-            await this.apiKeyService.findById(updateData.apiKeyId, userId);
-        }
 
         const saved = await chat.save();
         await saved.populate('defaultBranch');

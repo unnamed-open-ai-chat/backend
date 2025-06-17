@@ -54,12 +54,10 @@ input ChangePasswordDto {
 
 type Chat {
   _id: String!
-  apiKeyId: String
   archived: Boolean!
   defaultBranch: ChatBranch
   isPublic: Boolean!
   lastActivityAt: DateTime!
-  modelId: String
   pinned: Boolean!
   title: String!
 }
@@ -69,6 +67,7 @@ type ChatBranch {
   branchPoint: Float!
   isActive: Boolean!
   messageCount: Float!
+  modelConfig: ModelConfig
   name: String!
   parentBranchId: ChatBranch
 }
@@ -150,6 +149,13 @@ type MessagesResponse {
   total: Float!
 }
 
+type ModelConfig {
+  apiKeyId: String
+  maxTokens: Float
+  modelId: String
+  temperature: Float
+}
+
 type Mutation {
   addApiKey(payload: CreateApiKeyDto!): ApiKey!
   createChat: Chat!
@@ -163,6 +169,7 @@ type Mutation {
   revokeSession(sessionId: String!): Boolean!
   sendMessage(payload: AddMessageDto!): Message!
   updateApiKey(id: String!, payload: UpdateApiKeyDto!): ApiKey!
+  updateBranch(branchId: String!, payload: UpdateBranchDto!): ChatBranch!
   updateChat(id: String!, payload: UpdateChatDto!): Chat!
   updatePassword(payload: ChangePasswordDto!): User!
   updatePreferences(payload: UpdatePreferencesDto!): UserPreferences!
@@ -177,7 +184,7 @@ type Query {
   getChatMessages(query: GetMessagesDto!): MessagesResponse!
   getChats(query: GetManyChatsDto!): ChatsResponse!
   getPreferences: UserPreferences!
-  getSessions: [SessionResponse!]!
+  getSessions: [Session!]!
   getUser: User!
 }
 
@@ -185,6 +192,14 @@ input RegisterDto {
   displayName: String!
   email: String!
   password: String!
+}
+
+type Session {
+  _id: String!
+  deviceInfo: DeviceInfo!
+  expiresAt: DateTime!
+  isActive: Boolean!
+  lastUsedAt: DateTime!
 }
 
 type SessionResponse {
@@ -205,11 +220,21 @@ input UpdateApiKeyDto {
   isActive: Boolean
 }
 
-input UpdateChatDto {
+input UpdateBranchDto {
+  modelConfig: UpdateBranchModelConfigDto
+  name: String
+}
+
+input UpdateBranchModelConfigDto {
   apiKeyId: String
+  maxTokens: Float
+  modelId: String
+  temperature: Float
+}
+
+input UpdateChatDto {
   archived: Boolean
   isPublic: Boolean
-  modelId: String
   name: String
   pinned: Boolean
 }
@@ -220,9 +245,7 @@ input UpdatePreferencesDto {
   showSidebar: Boolean
   showTimestamps: Boolean
   theme: String
-  timezone: String
   use24HourFormat: Boolean
-  useMetricUnits: Boolean
 }
 
 input UpdateUserDto {
@@ -249,7 +272,5 @@ type UserPreferences {
   showSidebar: Boolean
   showTimestamps: Boolean
   theme: String
-  timezone: String
   use24HourFormat: Boolean
-  useMetricUnits: Boolean
 }

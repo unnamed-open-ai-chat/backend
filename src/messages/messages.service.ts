@@ -17,7 +17,7 @@ export class MessagesService {
     async create(
         messageData: Omit<Message, '_id' | 'originalContent' | 'index' | 'isEdited' | 'editedAt'>
     ): Promise<MessageDocument> {
-        const { branchId, content, role, attachments, modelUsed } = messageData;
+        const { branchId, chatId, content, role, attachments, modelUsed, tokens } = messageData;
 
         if (!Types.ObjectId.isValid(branchId)) {
             throw new BadRequestException('Invalid branch id');
@@ -27,13 +27,15 @@ export class MessagesService {
         const nextIndex = await this.getNextMessageIndex(branchId.toString());
 
         const message = new this.messageModel({
-            branchId: new Types.ObjectId(branchId),
-            index: nextIndex,
-            role,
-            content,
-            modelUsed,
             attachments: attachments?.map(id => new Types.ObjectId(id)),
+            branchId: new Types.ObjectId(branchId),
+            chatId,
+            content,
             metadata: {},
+            role,
+            index: nextIndex,
+            modelUsed,
+            tokens,
             isEdited: false,
         });
 

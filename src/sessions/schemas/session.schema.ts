@@ -8,7 +8,7 @@ import { User } from '@/users/schemas/user.schema';
 @Schema({ timestamps: true })
 @ObjectType()
 export class Session {
-    @Field()
+    @Field(() => String)
     _id: Types.ObjectId;
 
     @Prop({ type: Types.ObjectId, ref: 'User', required: true })

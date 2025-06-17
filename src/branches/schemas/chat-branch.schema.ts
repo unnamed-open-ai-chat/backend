@@ -2,6 +2,21 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
+@ObjectType()
+export class ModelConfig {
+    @Field(() => String, { nullable: true })
+    modelId?: string;
+
+    @Field(() => String, { nullable: true })
+    apiKeyId?: string;
+
+    @Field(() => Number, { nullable: true })
+    temperature?: number;
+
+    @Field(() => Number, { nullable: true })
+    maxTokens?: number;
+}
+
 @Schema({ timestamps: true })
 @ObjectType()
 export class ChatBranch {
@@ -36,6 +51,10 @@ export class ChatBranch {
 
     @Prop({ type: Object, default: {} })
     metadata: Record<string, any>;
+
+    @Prop()
+    @Field(() => ModelConfig, { nullable: true })
+    modelConfig?: ModelConfig;
 }
 
 export type ChatBranchDocument = ChatBranch & Document;

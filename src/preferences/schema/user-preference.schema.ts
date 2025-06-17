@@ -10,10 +10,6 @@ export class UserPreferences {
 
     @Field({ nullable: true })
     @Prop({ lowercase: true, trim: true })
-    timezone?: string;
-
-    @Field({ nullable: true })
-    @Prop({ lowercase: true, trim: true })
     dateFormat?: string;
 
     @Field({ nullable: true })
@@ -23,10 +19,6 @@ export class UserPreferences {
     @Field({ nullable: true })
     @Prop()
     use24HourFormat?: boolean;
-
-    @Field({ nullable: true })
-    @Prop()
-    useMetricUnits?: boolean;
 
     @Field({ nullable: true })
     @Prop()

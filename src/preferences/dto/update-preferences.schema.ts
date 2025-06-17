@@ -3,12 +3,6 @@ import { IsBoolean, IsOptional, IsString } from 'class-validator';
 
 @InputType()
 export class UpdatePreferencesDto {
-    // Localization
-    @Field({ nullable: true })
-    @IsOptional()
-    @IsString()
-    timezone?: string;
-
     @Field({ nullable: true })
     @IsOptional()
     @IsString()
@@ -23,11 +17,6 @@ export class UpdatePreferencesDto {
     @IsOptional()
     @IsBoolean()
     use24HourFormat?: boolean;
-
-    @Field({ nullable: true })
-    @IsOptional()
-    @IsBoolean()
-    useMetricUnits?: boolean;
 
     // UI Preferences
     @Field({ nullable: true })

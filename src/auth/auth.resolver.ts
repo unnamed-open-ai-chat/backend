@@ -1,7 +1,7 @@
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 
 import { UseGuards } from '@nestjs/common';
-import { SessionResponse } from 'src/sessions/schemas/session.schema';
+import { Session, SessionResponse } from 'src/sessions/schemas/session.schema';
 import { User } from 'src/users/schemas/user.schema';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
@@ -50,9 +50,9 @@ export class AuthResolver {
         return this.authService.refreshTokens(refreshToken);
     }
 
-    @Query(() => [SessionResponse])
+    @Query(() => [Session])
     @UseGuards(GqlAuthGuard)
-    async getSessions(@CurrentUser() user: AccessJwtPayload): Promise<SessionResponse[]> {
+    async getSessions(@CurrentUser() user: AccessJwtPayload): Promise<Session[]> {
         return await this.authService.getUserSessions(user.sub);
     }
 

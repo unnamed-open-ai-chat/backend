@@ -1,10 +1,11 @@
 import { UseGuards } from '@nestjs/common';
-import { Args, Query, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 
 import { CurrentUser } from '@/auth/decorators/current-user.decorator';
 import { GqlAuthGuard } from '@/auth/guards/gql-auth.guard';
 import { AccessJwtPayload } from '@/auth/interfaces/jwt-payload.interface';
 import { BranchesService } from './branches.service';
+import { UpdateBranchDto } from './dto/update-branch.dto';
 import { ChatBranch } from './schemas/chat-branch.schema';
 
 @Resolver(() => ChatBranch)
@@ -18,5 +19,15 @@ export class BranchesResolver {
         @Args('chatId') chatId: string
     ): Promise<ChatBranch[]> {
         return await this.branchesService.findByChatId(chatId, user.sub);
+    }
+
+    @UseGuards(GqlAuthGuard)
+    @Mutation(() => ChatBranch)
+    async updateBranch(
+        @CurrentUser() user: AccessJwtPayload,
+        @Args('branchId') branchId: string,
+        @Args('payload') payload: UpdateBranchDto
+    ): Promise<ChatBranch> {
+        return await this.branchesService.update(branchId, user.sub, payload);
     }
 }

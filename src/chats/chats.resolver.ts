@@ -10,6 +10,7 @@ import { BranchesService } from '@/branches/branches.service';
 import { EncryptionService } from '@/encryption/encryption.service';
 import { ApiKeysService } from '@/keys/api-key.service';
 import { MessagesService } from '@/messages/messages.service';
+import { WebsocketsService } from '@/websockets/websockets.service';
 import { Types } from 'mongoose';
 import { Message, MessageRole } from '../messages/schemas/message.schema';
 import { ChatService } from './chats.service';
@@ -26,7 +27,8 @@ export class ChatsResolver {
         private messagesService: MessagesService,
         private aiService: AIService,
         private apiKeyService: ApiKeysService,
-        private encryptionService: EncryptionService
+        private encryptionService: EncryptionService,
+        private websocketsService: WebsocketsService
     ) {}
 
     @UseGuards(GqlAuthGuard)
@@ -114,7 +116,7 @@ export class ChatsResolver {
             content: [
                 {
                     type: 'text',
-                    text: payload.prompt, //
+                    text: payload.prompt,
                 },
             ],
             metadata: {},
@@ -142,43 +144,75 @@ export class ChatsResolver {
 
         let completedMessage = '';
 
-        await this.aiService.sendMessage(
-            apiKey.provider,
-            key,
-            payload.modelId,
-            chat.messages,
-            {},
-            {
-                onEnd: async () => {
-                    console.log('Chat ended');
+        this.websocketsService.emitToBranch(user.sub, payload.branchId, 'message:start', null);
 
-                    // Save AI message
-                    await this.messagesService.create({
-                        attachments: [],
-                        branchId: new Types.ObjectId(payload.branchId),
-                        chatId: branch.chatId,
-                        content: [
-                            {
-                                type: 'text',
-                                text: completedMessage,
-                            },
-                        ],
-                        metadata: {},
-                        role: MessageRole.assistant,
-                        tokens: 0,
-                    });
-                },
-                // eslint-disable-next-line @typescript-eslint/require-await
-                onError: async error => {
-                    console.log('Chat error', error);
-                },
-                // eslint-disable-next-line @typescript-eslint/require-await
-                onText: async text => {
-                    completedMessage += text;
-                    console.log('Chat chunk', text);
-                },
-            }
-        );
+        this.aiService
+            .sendMessage(
+                apiKey.provider,
+                key,
+                payload.modelId,
+                chat.messages,
+                {},
+                {
+                    onEnd: async () => {
+                        console.log('Chat ended');
+
+                        // Save AI message
+                        const message = await this.messagesService.create({
+                            attachments: [],
+                            branchId: new Types.ObjectId(payload.branchId),
+                            chatId: branch.chatId,
+                            content: [
+                                {
+                                    type: 'text',
+                                    text: completedMessage,
+                                },
+                            ],
+                            metadata: {},
+                            role: MessageRole.assistant,
+                            tokens: 0,
+                        });
+
+                        this.websocketsService.emitToBranch(
+                            user.sub,
+                            payload.branchId,
+                            'message:end',
+                            message
+                        );
+                    },
+                    // eslint-disable-next-line @typescript-eslint/require-await
+                    onError: async error => {
+                        console.log('Chat error', error);
+
+                        this.websocketsService.emitToBranch(
+                            user.sub,
+                            payload.branchId,
+                            'message:error',
+                            error
+                        );
+                    },
+                    // eslint-disable-next-line @typescript-eslint/require-await
+                    onText: async text => {
+                        completedMessage += text;
+                        console.log('Chat chunk', text);
+
+                        this.websocketsService.emitToBranch(
+                            user.sub,
+                            payload.branchId,
+                            'message:chunk',
+                            text
+                        );
+                    },
+                }
+            )
+            .catch(error => {
+                this.websocketsService.emitToBranch(
+                    user.sub,
+                    payload.branchId,
+                    'message:error',
+                    error
+                );
+            });
 
         return userMessage;
     }

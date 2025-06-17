@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 
 import { Chat } from '@/chats/schemas/chat.schema';
+import { ApiKeysService } from '@/keys/api-key.service';
 import { MessagesService } from '@/messages/messages.service';
 import { UpdateBranchDto } from './dto/update-branch.dto';
 import { ChatBranch, ChatBranchDocument } from './schemas/chat-branch.schema';
@@ -11,7 +12,8 @@ import { ChatBranch, ChatBranchDocument } from './schemas/chat-branch.schema';
 export class BranchesService {
     constructor(
         @InjectModel(ChatBranch.name) private branchModel: Model<ChatBranch>,
-        private readonly messageService: MessagesService
+        private readonly messageService: MessagesService,
+        private readonly apiKeyService: ApiKeysService
     ) {}
 
     async create(
@@ -88,6 +90,12 @@ export class BranchesService {
         }
 
         const branch = await this.findById(branchId, userId);
+
+        const apiKeyId = branch.modelConfig?.apiKeyId;
+        if (apiKeyId) {
+            await this.apiKeyService.findById(apiKeyId, userId);
+        }
+
         Object.assign(branch, updateData);
         return await branch.save();
     }

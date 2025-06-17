@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
+import { ApiKeysModule } from '@/keys/api-key.module';
 import { MessagesModule } from '@/messages/messages.module';
 import { BranchesResolver } from './branches.resolver';
 import { BranchesService } from './branches.service';
@@ -10,6 +11,7 @@ import { ChatBranch, ChatBranchSchema } from './schemas/chat-branch.schema';
     imports: [
         MongooseModule.forFeature([{ name: ChatBranch.name, schema: ChatBranchSchema }]),
         MessagesModule,
+        ApiKeysModule,
     ],
     providers: [BranchesService, BranchesResolver],
     exports: [BranchesService],
