@@ -5,6 +5,7 @@ import { CurrentUser } from '@/auth/decorators/current-user.decorator';
 import { GqlAuthGuard } from '@/auth/guards/gql-auth.guard';
 import { AccessJwtPayload } from '@/auth/interfaces/jwt-payload.interface';
 import { BranchesService } from './branches.service';
+import { ForkBranchDto } from './dto/fork-branch.dto';
 import { UpdateBranchDto } from './dto/update-branch.dto';
 import { ChatBranch } from './schemas/chat-branch.schema';
 
@@ -29,5 +30,15 @@ export class BranchesResolver {
         @Args('payload') payload: UpdateBranchDto
     ): Promise<ChatBranch> {
         return await this.branchesService.update(branchId, user.sub, payload);
+    }
+
+    @UseGuards(GqlAuthGuard)
+    @Mutation(() => ChatBranch)
+    async forkBranch(
+        @CurrentUser() user: AccessJwtPayload,
+        @Args('originalBranchId') originalBranchId: string,
+        @Args('payload') payload: ForkBranchDto
+    ): Promise<ChatBranch> {
+        return await this.branchesService.forkBranch(user.sub, originalBranchId, payload);
     }
 }

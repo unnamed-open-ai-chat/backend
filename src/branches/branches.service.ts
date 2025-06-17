@@ -5,6 +5,9 @@ import { Model, Types } from 'mongoose';
 import { Chat } from '@/chats/schemas/chat.schema';
 import { ApiKeysService } from '@/keys/api-key.service';
 import { MessagesService } from '@/messages/messages.service';
+import { WebsocketsService } from '@/websockets/websockets.service';
+import { CreateBranchDto } from './dto/create-branch.dto';
+import { ForkBranchDto } from './dto/fork-branch.dto';
 import { UpdateBranchDto } from './dto/update-branch.dto';
 import { ChatBranch, ChatBranchDocument } from './schemas/chat-branch.schema';
 
@@ -12,36 +15,48 @@ import { ChatBranch, ChatBranchDocument } from './schemas/chat-branch.schema';
 export class BranchesService {
     constructor(
         @InjectModel(ChatBranch.name) private branchModel: Model<ChatBranch>,
+        @InjectModel(Chat.name) private chatModel: Model<Chat>,
         private readonly messageService: MessagesService,
-        private readonly apiKeyService: ApiKeysService
+        private readonly apiKeyService: ApiKeysService,
+        private readonly websocketsService: WebsocketsService
     ) {}
 
     async create(
         userId: string,
-        chat: Chat,
-        name: string,
-        parentBranchId?: string,
-        branchPoint = 0
+        chatId: string | Chat,
+        data: CreateBranchDto,
+        messageCount = 0,
+        isActive = true
     ): Promise<ChatBranchDocument> {
         if (!Types.ObjectId.isValid(userId)) {
             throw new BadRequestException('Invalid user id');
+        }
+
+        const chat =
+            typeof chatId === 'string' ? await this.chatModel.findById(chatId).exec() : chatId;
+
+        if (!chat) {
+            throw new NotFoundException('Chat not found');
         }
 
         if (chat.userId.toString() !== userId) {
             throw new NotFoundException('Chat not found');
         }
 
+        const { parentBranchId, ...rest } = data;
+
         const branch = new this.branchModel({
             userId: chat.userId,
             chatId: chat._id,
-            name,
             parentBranchId: parentBranchId ? new Types.ObjectId(parentBranchId) : undefined,
-            branchPoint: branchPoint,
-            messageCount: 0,
-            isActive: true,
+            messageCount,
+            isActive,
+            ...rest,
         });
 
-        return await branch.save();
+        const saved = await branch.save();
+        this.websocketsService.emitBranchCreated(userId, saved);
+        return saved;
     }
 
     async findById(branchId: string, userId?: string): Promise<ChatBranchDocument> {
@@ -97,6 +112,7 @@ export class BranchesService {
         }
 
         Object.assign(branch, updateData);
+        this.websocketsService.emitBranchUpdated(userId, branch);
         return await branch.save();
     }
 
@@ -123,6 +139,11 @@ export class BranchesService {
         // Mark branch as inactive
         branch.isActive = false;
         await branch.save();
+
+        if (userId) {
+            this.websocketsService.emitBranchDeleted(userId, branchId);
+        }
+
         return branch.messageCount;
     }
 
@@ -138,5 +159,37 @@ export class BranchesService {
         }
 
         return branches;
+    }
+
+    async forkBranch(
+        userId: string,
+        originalBranchId: string,
+        payload: ForkBranchDto
+    ): Promise<ChatBranch> {
+        const { name, cloneMessages } = payload;
+
+        const originalBranch = await this.findById(originalBranchId, userId);
+
+        const newBranch = await this.create(
+            userId,
+            originalBranch.chatId.toString(),
+            {
+                name: name || `Fork of ${originalBranch.name}`,
+                branchPoint: originalBranch.branchPoint + 1,
+                modelConfig: originalBranch.modelConfig,
+                parentBranchId: originalBranch._id.toString(),
+            },
+            originalBranch.messageCount,
+            originalBranch.isActive
+        );
+
+        if (cloneMessages) {
+            await this.messageService.cloneAllByBranchId(
+                originalBranchId,
+                newBranch._id.toString()
+            );
+        }
+
+        return newBranch;
     }
 }

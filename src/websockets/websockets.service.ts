@@ -1,3 +1,4 @@
+import { ChatBranch } from '@/branches/schemas/chat-branch.schema';
 import { Chat } from '@/chats/schemas/chat.schema';
 import { ApiKey } from '@/keys/schemas/api-key.schema';
 import { UserPreferences } from '@/preferences/schema/user-preference.schema';
@@ -369,6 +370,19 @@ export class WebsocketsService {
 
     emitMessageDeleted(userId: string, messageId: string) {
         this.emitToUser(userId, 'message:deleted', messageId);
+    }
+
+    // Branch Events
+    emitBranchCreated(userId: string, branch: ChatBranch) {
+        this.emitToUser(userId, 'branch:created', branch);
+    }
+
+    emitBranchUpdated(userId: string, branch: ChatBranch) {
+        this.emitToUser(userId, 'branch:updated', branch);
+    }
+
+    emitBranchDeleted(userId: string, branchId: string) {
+        this.emitToUser(userId, 'branch:deleted', branchId);
     }
 
     // User Events

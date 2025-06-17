@@ -212,6 +212,7 @@ export class ChatsResolver {
                 }
             )
             .catch(error => {
+                console.log('Internal chat handling error', error);
                 this.websocketsService.emitToBranch(
                     user.sub,
                     payload.branchId,

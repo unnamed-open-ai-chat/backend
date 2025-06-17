@@ -8,7 +8,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, RootFilterQuery, Types } from 'mongoose';
 
 import { BranchesService } from '@/branches/branches.service';
-import { ApiKeysService } from '@/keys/api-key.service';
 import { MessagesService } from '@/messages/messages.service';
 import { WebsocketsService } from '@/websockets/websockets.service';
 import { GetManyChatsDto } from './dto/get-chat-dto';
@@ -21,7 +20,6 @@ export class ChatService {
         @InjectModel(Chat.name) private chatModel: Model<ChatDocument>,
         private readonly messagesService: MessagesService,
         private readonly branchService: BranchesService,
-        private readonly apiKeyService: ApiKeysService,
         private readonly websocketsService: WebsocketsService
     ) {}
 
@@ -37,7 +35,10 @@ export class ChatService {
         await chat.save();
 
         // Create default branch
-        const defaultBranch = await this.branchService.create(userId, chat, 'main');
+        const defaultBranch = await this.branchService.create(userId, chat, {
+            name: 'main',
+            branchPoint: 0,
+        });
 
         // update chat with default branch
         chat.defaultBranch = defaultBranch._id;
@@ -115,7 +116,7 @@ export class ChatService {
         }
 
         // Update fields
-        chat.title = updateData.name ?? chat.title;
+        chat.title = updateData.title ?? chat.title;
         chat.isPublic = updateData.isPublic ?? chat.isPublic;
         chat.archived = updateData.archived ?? chat.archived;
         chat.pinned = updateData.pinned ?? chat.pinned;

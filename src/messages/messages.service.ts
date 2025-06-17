@@ -199,4 +199,23 @@ export class MessagesService {
         const lastMessage = await this.getLastMessage(branchId);
         return lastMessage ? lastMessage.index + 1 : 0;
     }
+
+    async cloneAllByBranchId(branchId: string, newBranchId: string) {
+        const messages = await this.messageModel
+            .find({ branchId: new Types.ObjectId(branchId) })
+            .lean();
+
+        const clonedMessages = messages.map(msg => {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { _id, branchId, ...rest } = msg;
+
+            return {
+                ...rest,
+                chatId: new Types.ObjectId(msg.chatId),
+                branchId: new Types.ObjectId(newBranchId),
+            };
+        });
+
+        await this.messageModel.insertMany(clonedMessages);
+    }
 }

@@ -8,7 +8,7 @@ export class UpdateChatDto {
     @IsString()
     @MinLength(1, { message: 'Chat name must be at least 1 character' })
     @MaxLength(100, { message: 'Chat name must be at most 100 characters' })
-    name?: string;
+    title?: string;
 
     @Field({ nullable: true })
     @IsOptional()
