@@ -12,16 +12,17 @@ import {
     AIProviderId,
     AIProviderOptions,
 } from './interfaces/ai-provider.interface';
+import { FileUploadService } from '@/files/files.service';
 
 @Injectable()
 export class AIService {
     private readonly clients: Record<AIProviderId, AIProviderClient>;
 
-    constructor() {
+    constructor(private readonly fileService: FileUploadService) {
         this.clients = {
             anthropic: new AnthropicClient(),
             google: new GoogleClient(),
-            openrouter: new OpenRouterClient(),
+            openrouter: new OpenRouterClient(fileService),
             openai: new OpenAIClient(),
         };
     }

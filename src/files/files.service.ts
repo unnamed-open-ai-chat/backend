@@ -408,4 +408,37 @@ export class FileUploadService {
         const stream = fs.createReadStream(file.path);
         return { stream, file };
     }
+
+    /**
+     * Get attachment data formatted for AI processing (base64 data URL)
+     * Returns the file as a base64 data URL ready to send to AI APIs
+     */
+    async getAttachmentAsBase64(attachmentId: string): Promise<{ data: string; mimetype: string }> {
+        try {
+            // Get file metadata
+            const file = await this.getFileById(attachmentId);
+
+            // Check if it's an image file
+            if (!file.mimetype.startsWith('image/')) {
+                throw new BadRequestException('File is not an image');
+            }
+
+            // Check if physical file exists
+            if (!fs.existsSync(file.path)) {
+                throw new NotFoundException('Physical file not found');
+            }
+
+            // Read file buffer
+            const buffer = fs.readFileSync(file.path);
+
+            // Convert to base64 data URL
+            const base64 = buffer.toString('base64');
+            const dataUrl = `data:${file.mimetype};base64,${base64}`;
+
+            return { data: dataUrl, mimetype: file.mimetype };
+        } catch (error) {
+            console.error(`Error loading attachment ${attachmentId} for AI:`, error);
+            throw error;
+        }
+    }
 }

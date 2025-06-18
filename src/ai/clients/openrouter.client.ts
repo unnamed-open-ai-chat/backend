@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 
+import { FileUploadService } from '@/files/files.service';
 import { Message, MessageRole } from '@/messages/schemas/message.schema';
 import {
     AIModel,
@@ -10,6 +11,8 @@ import {
 } from '../interfaces/ai-provider.interface';
 
 export class OpenRouterClient implements AIProviderClient {
+    constructor(private readonly fileUploadService: FileUploadService) {}
+
     private createClient(key: string): OpenAI {
         return new OpenAI({
             apiKey: key,
@@ -55,7 +58,7 @@ export class OpenRouterClient implements AIProviderClient {
                 capabilities: {
                     codeExecution: false,
                     fileAnalysis: false,
-                    functionCalling: true,
+                    functionCalling: false,
                     imageAnalysis: model.id.includes('vision') || model.id.includes('gpt-4'),
                     imageGeneration:
                         model.id.includes('dall-e') ||
@@ -161,18 +164,73 @@ export class OpenRouterClient implements AIProviderClient {
         const client = this.createClient(key);
 
         // Convert messages to OpenAI format
-        const openAIMessages = messages.map(message => ({
-            role: message.role === MessageRole.user ? ('user' as const) : ('assistant' as const),
-            content: message.content
-                .filter(part => part.text)
-                .map(part => part.text!)
-                .join('\n'),
-        }));
+        const openAIMessages = await Promise.all(
+            messages.map(async (message, index) => {
+                const role =
+                    message.role === MessageRole.user ? ('user' as const) : ('assistant' as const);
+
+                // For the last user message, include images if attachments exist
+                if (
+                    message.role === MessageRole.user &&
+                    index === messages.length - 1 &&
+                    message.attachments?.length > 0
+                ) {
+                    const content: Array<{
+                        type: string;
+                        text?: string;
+                        image_url?: { url: string };
+                    }> = [];
+
+                    // Add text content if exists
+                    const textContent = message.content
+                        .filter(part => part.text)
+                        .map(part => part.text!)
+                        .join('\n');
+
+                    if (textContent) {
+                        content.push({ type: 'text', text: textContent });
+                    }
+
+                    // Add images from attachments
+                    for (const attachmentId of message.attachments) {
+                        try {
+                            const { data: attachmentData } =
+                                await this.fileUploadService.getAttachmentAsBase64(
+                                    attachmentId.toString()
+                                );
+
+                            if (attachmentData) {
+                                content.push({
+                                    type: 'image_url',
+                                    image_url: {
+                                        url: attachmentData,
+                                    },
+                                });
+                            }
+                        } catch (error) {
+                            console.error('Error loading attachment:', attachmentId, error);
+                            // Continue processing other attachments
+                        }
+                    }
+
+                    return { role, content };
+                } else {
+                    // For other messages, only text
+                    return {
+                        role,
+                        content: message.content
+                            .filter(part => part.text)
+                            .map(part => part.text!)
+                            .join('\n'),
+                    };
+                }
+            })
+        );
 
         try {
             const stream = await client.chat.completions.create({
                 model: modelId,
-                messages: openAIMessages,
+                messages: openAIMessages as any[],
                 temperature: settings.temperature,
                 max_tokens: settings.maxTokens,
                 stream: true,
