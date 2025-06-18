@@ -1,4 +1,4 @@
-import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
+import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
@@ -40,6 +40,10 @@ export class Message {
     @Field(() => String)
     _id: Types.ObjectId;
 
+    @Prop([{ type: Types.ObjectId, ref: 'File' }])
+    @Field(() => [ID])
+    attachments: Types.ObjectId[];
+
     @Prop({ types: Types.ObjectId, ref: 'Chat', required: true })
     @Field(() => String)
     chatId: Types.ObjectId;
@@ -67,10 +71,6 @@ export class Message {
     @Prop({ default: 0 })
     @Field({ nullable: true })
     tokens: number;
-
-    @Prop([{ type: [Types.ObjectId], ref: 'File' }])
-    @Field(() => [String])
-    attachments: Types.ObjectId[];
 
     @Prop({ type: Object, default: {} })
     metadata: Record<string, any>;

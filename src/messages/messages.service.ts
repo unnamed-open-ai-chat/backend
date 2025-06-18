@@ -25,12 +25,11 @@ export class MessagesService {
         if (!Types.ObjectId.isValid(branchId)) {
             throw new BadRequestException('Invalid branch id');
         }
-
         // Get next index for this branch
         const nextIndex = await this.getNextMessageIndex(branchId.toString());
 
         const message = new this.messageModel({
-            attachments: attachments?.map(id => new Types.ObjectId(id)),
+            attachments,
             branchId: new Types.ObjectId(branchId),
             chatId,
             content,
@@ -59,7 +58,7 @@ export class MessagesService {
             throw new BadRequestException('Invalid message id');
         }
 
-        const message = await this.messageModel.findById(messageId).populate('attachments').exec();
+        const message = await this.messageModel.findById(messageId).exec();
         if (!message) {
             throw new NotFoundException('Message not found');
         }
@@ -92,13 +91,7 @@ export class MessagesService {
         }
 
         const [messages, total] = await Promise.all([
-            this.messageModel
-                .find(query)
-                .sort({ index: 1 })
-                .skip(offset)
-                .limit(limit)
-                .populate('attachments')
-                .exec(),
+            this.messageModel.find(query).sort({ index: 1 }).skip(offset).limit(limit).exec(),
 
             this.messageModel.countDocuments(query),
         ]);
@@ -191,7 +184,6 @@ export class MessagesService {
         return this.messageModel
             .findOne({ branchId: new Types.ObjectId(branchId) })
             .sort({ index: -1 })
-            .populate('attachments')
             .exec();
     }
 

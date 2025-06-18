@@ -1,5 +1,5 @@
 import { Field, InputType } from '@nestjs/graphql';
-import { IsString, MaxLength } from 'class-validator';
+import { IsArray, IsOptional, IsString, MaxLength } from 'class-validator';
 
 @InputType()
 export class AddMessageDto {
@@ -23,4 +23,10 @@ export class AddMessageDto {
     @Field()
     @IsString()
     apiKeyId: string;
+
+    @Field(() => [String], { nullable: true })
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    attachments?: string[];
 }

@@ -32,6 +32,7 @@ enum AIProviderId {
 
 input AddMessageDto {
   apiKeyId: String!
+  attachments: [String!]
   branchId: String!
   modelId: String!
   prompt: String!
@@ -96,6 +97,17 @@ type DeviceInfo {
   userAgent: String!
 }
 
+type File {
+  _id: String!
+  createdAt: DateTime!
+  description: String
+  filename: String!
+  mimetype: String!
+  originalName: String!
+  size: Float!
+  updatedAt: DateTime!
+}
+
 input ForkBranchDto {
   cloneMessages: Boolean
   name: String
@@ -126,7 +138,7 @@ input LoginDto {
 
 type Message {
   _id: String!
-  attachments: [String!]!
+  attachments: [ID!]!
   branchId: String!
   chatId: String!
   content: [MessageContent!]!
@@ -166,6 +178,7 @@ type Mutation {
   createChat: Chat!
   createPreferences: UserPreferences!
   deleteApiKey(id: String!): Boolean!
+  deleteFile(id: ID!): Boolean!
   forkBranch(originalBranchId: String!, payload: ForkBranchDto!): ChatBranch!
   login(payload: LoginDto!): SessionResponse!
   logout: Boolean!
@@ -177,6 +190,7 @@ type Mutation {
   updateApiKey(id: String!, payload: UpdateApiKeyDto!): ApiKey!
   updateBranch(branchId: String!, payload: UpdateBranchDto!): ChatBranch!
   updateChat(id: String!, payload: UpdateChatDto!): Chat!
+  updateFile(id: ID!, updateFileDto: UpdateFileDto!): File!
   updatePassword(payload: ChangePasswordDto!): User!
   updatePreferences(payload: UpdatePreferencesDto!): UserPreferences!
   updateUser(payload: UpdateUserDto!): User!
@@ -189,9 +203,12 @@ type Query {
   getChatBranches(chatId: String!): [ChatBranch!]!
   getChatMessages(query: GetMessagesDto!): MessagesResponse!
   getChats(query: GetManyChatsDto!): ChatsResponse!
+  getFileById(id: ID!): File!
   getPreferences: UserPreferences!
   getSessions: [Session!]!
   getUser: User!
+  getUserFiles: [File!]!
+  getUserStorageStats: UserStorageStats!
 }
 
 input RegisterDto {
@@ -245,6 +262,11 @@ input UpdateChatDto {
   title: String
 }
 
+input UpdateFileDto {
+  description: String
+  originalName: String
+}
+
 input UpdatePreferencesDto {
   dateFormat: String
   language: String
@@ -279,4 +301,10 @@ type UserPreferences {
   showTimestamps: Boolean
   theme: String
   use24HourFormat: Boolean
+}
+
+type UserStorageStats {
+  limit: Float!
+  remaining: Float!
+  used: Float!
 }

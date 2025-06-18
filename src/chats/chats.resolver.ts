@@ -8,6 +8,7 @@ import { GqlAuthGuard } from '@/auth/guards/gql-auth.guard';
 import { AccessJwtPayload } from '@/auth/interfaces/jwt-payload.interface';
 import { BranchesService } from '@/branches/branches.service';
 import { EncryptionService } from '@/encryption/encryption.service';
+import { FileUploadService } from '@/files/files.service';
 import { ApiKeysService } from '@/keys/api-key.service';
 import { MessagesService } from '@/messages/messages.service';
 import { WebsocketsService } from '@/websockets/websockets.service';
@@ -28,7 +29,8 @@ export class ChatsResolver {
         private aiService: AIService,
         private apiKeyService: ApiKeysService,
         private encryptionService: EncryptionService,
-        private websocketsService: WebsocketsService
+        private websocketsService: WebsocketsService,
+        private fileService: FileUploadService
     ) {}
 
     @UseGuards(GqlAuthGuard)
@@ -107,11 +109,17 @@ export class ChatsResolver {
         @Args('payload') payload: AddMessageDto
     ) {
         const branch = await this.branchesService.findById(payload.branchId, user.sub);
+        const attachments: Types.ObjectId[] = [];
+
+        for (const attachment of payload.attachments || []) {
+            const queried = await this.fileService.getFileById(attachment, user.sub);
+            attachments.push(queried._id);
+        }
 
         // First, save the user message
         const userMessage = await this.messagesService.create(
             {
-                attachments: [],
+                attachments,
                 branchId: new Types.ObjectId(payload.branchId),
                 chatId: branch.chatId,
                 content: [
