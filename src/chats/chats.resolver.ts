@@ -1,8 +1,9 @@
 import { UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Types } from 'mongoose';
 
 import { AIService } from '@/ai/ai.service';
-import { AIModel } from '@/ai/interfaces/ai-provider.interface';
+import { AIModel, AIProviderCallbacks } from '@/ai/interfaces/ai-provider.interface';
 import { CurrentUser } from '@/auth/decorators/current-user.decorator';
 import { GqlAuthGuard } from '@/auth/guards/gql-auth.guard';
 import { AccessJwtPayload } from '@/auth/interfaces/jwt-payload.interface';
@@ -12,7 +13,6 @@ import { FileUploadService } from '@/files/files.service';
 import { ApiKeysService } from '@/keys/api-key.service';
 import { MessagesService } from '@/messages/messages.service';
 import { WebsocketsService } from '@/websockets/websockets.service';
-import { Types } from 'mongoose';
 import { Message, MessageRole } from '../messages/schemas/message.schema';
 import { ChatService } from './chats.service';
 import { AddMessageDto } from './dto/add-message.dto';
@@ -156,78 +156,117 @@ export class ChatsResolver {
         let completedMessage = '';
 
         this.websocketsService.emitToBranch(user.sub, payload.branchId, 'message:start', null);
+        const responseAttachments: Types.ObjectId[] = [];
 
-        this.aiService
-            .sendMessage(
-                apiKey.provider,
-                key,
-                payload.modelId,
-                chat.messages,
-                {},
-                {
-                    onEnd: async () => {
-                        console.log('Chat ended');
+        const callbacks: AIProviderCallbacks = {
+            onEnd: async () => {
+                console.log('Chat ended');
 
-                        // Save AI message
-                        const message = await this.messagesService.create(
+                // Save AI message
+                const message = await this.messagesService.create(
+                    {
+                        attachments: responseAttachments,
+                        branchId: new Types.ObjectId(payload.branchId),
+                        chatId: branch.chatId,
+                        content: [
                             {
-                                attachments: [],
-                                branchId: new Types.ObjectId(payload.branchId),
-                                chatId: branch.chatId,
-                                content: [
-                                    {
-                                        type: 'text',
-                                        text: completedMessage,
-                                    },
-                                ],
-                                metadata: {},
-                                role: MessageRole.assistant,
-                                tokens: 0,
+                                type: 'text',
+                                text: completedMessage,
                             },
-                            user.sub
-                        );
-
-                        this.websocketsService.emitToBranch(
-                            user.sub,
-                            payload.branchId,
-                            'message:end',
-                            message
-                        );
+                        ],
+                        metadata: {},
+                        role: MessageRole.assistant,
+                        tokens: 0,
                     },
-                    // eslint-disable-next-line @typescript-eslint/require-await
-                    onError: async error => {
-                        console.log('Chat error', error);
+                    user.sub
+                );
 
-                        this.websocketsService.emitToBranch(
-                            user.sub,
-                            payload.branchId,
-                            'message:error',
-                            error
-                        );
-                    },
-                    // eslint-disable-next-line @typescript-eslint/require-await
-                    onText: async text => {
-                        completedMessage += text;
-                        console.log('Chat chunk', text);
+                this.websocketsService.emitToBranch(
+                    user.sub,
+                    payload.branchId,
+                    'message:end',
+                    message
+                );
+            },
+            // eslint-disable-next-line @typescript-eslint/require-await
+            onError: async error => {
+                console.log('Chat error', error);
 
-                        this.websocketsService.emitToBranch(
-                            user.sub,
-                            payload.branchId,
-                            'message:chunk',
-                            text
-                        );
-                    },
-                }
-            )
-            .catch(error => {
-                console.log('Internal chat handling error', error);
                 this.websocketsService.emitToBranch(
                     user.sub,
                     payload.branchId,
                     'message:error',
                     error
                 );
-            });
+            },
+            // eslint-disable-next-line @typescript-eslint/require-await
+            onText: async text => {
+                completedMessage += text;
+                console.log('Chat chunk', text);
+
+                this.websocketsService.emitToBranch(
+                    user.sub,
+                    payload.branchId,
+                    'message:chunk',
+                    text
+                );
+            },
+            // eslint-disable-next-line @typescript-eslint/require-await
+            onMediaGenStart: async type => {
+                this.websocketsService.emitToBranch(
+                    user.sub,
+                    payload.branchId,
+                    'media:start',
+                    type
+                );
+            },
+
+            onMediaGenEnd: async (url: string, type: string) => {
+                const attachment = await this.fileService.uploadFromURL(url, user.sub);
+                const attachmentId = attachment?.file?._id;
+                if (attachmentId) responseAttachments.push(attachmentId);
+
+                this.websocketsService.emitToBranch(user.sub, payload.branchId, 'media:end', {
+                    url,
+                    type,
+                });
+            },
+            // eslint-disable-next-line @typescript-eslint/require-await
+            onMediaGenError: async error => {
+                this.websocketsService.emitToBranch(
+                    user.sub,
+                    payload.branchId,
+                    'media:error',
+                    error
+                );
+            },
+        };
+
+        if (payload.useImageTool) {
+            this.aiService
+                .generateImage(apiKey.provider, key, payload.modelId, chat.messages, {}, callbacks)
+                .catch(error => {
+                    console.log('Internal image generation handling error', error);
+                    this.websocketsService.emitToBranch(
+                        user.sub,
+                        payload.branchId,
+                        'message:error',
+                        error
+                    );
+                });
+        } else {
+            this.aiService
+                .sendMessage(apiKey.provider, key, payload.modelId, chat.messages, {}, callbacks)
+                .catch(error => {
+                    console.log('Internal chat handling error', error);
+                    this.websocketsService.emitToBranch(
+                        user.sub,
+                        payload.branchId,
+                        'message:error',
+                        error
+                    );
+                });
+        }
 
         return userMessage;
     }

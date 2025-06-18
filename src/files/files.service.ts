@@ -2,9 +2,11 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import * as fs from 'fs';
 import { createWriteStream } from 'fs';
+import { request as httpRequest } from 'http';
+import { request as httpsRequest } from 'https';
 import { Model } from 'mongoose';
 import * as path from 'path';
-import { pipeline, Transform } from 'stream';
+import { pipeline, Readable, Transform } from 'stream';
 import { v4 as uuidv4 } from 'uuid';
 
 import { CreateFileDto } from './dto/create-file.dto';
@@ -266,6 +268,57 @@ export class FileUploadService {
                 bytesProcessed,
             };
         }
+    }
+
+    async uploadFromURL(
+        url: string,
+        userId: string,
+        onProgress?: (bytesProcessed: number) => void
+    ) {
+        function createNetworkReadStream(url: string): Readable {
+            const parsedUrl = new URL(url);
+            const requester = parsedUrl.protocol === 'https:' ? httpsRequest : httpRequest;
+
+            function proxyStream(): Readable {
+                let stream: Readable;
+
+                const out = new Readable({
+                    read() {
+                        // Do nothing, we'll push data from the response stream
+                    },
+                });
+
+                const req = requester(parsedUrl, res => {
+                    if (res.statusCode && res.statusCode >= 400) {
+                        out.destroy(new Error(`Request failed with status ${res.statusCode}`));
+                        return;
+                    }
+
+                    stream = res;
+
+                    stream.on('data', chunk => out.push(chunk));
+                    stream.on('end', () => out.push(null));
+                    stream.on('error', err => out.destroy(err));
+                });
+
+                req.on('error', err => out.destroy(err));
+                req.end();
+
+                return out;
+            }
+
+            const readable = new Readable().wrap(proxyStream());
+
+            return readable;
+        }
+
+        return this.processStreamUpload(
+            createNetworkReadStream(url),
+            url,
+            'application/octet-stream',
+            userId,
+            onProgress
+        );
     }
 
     /**

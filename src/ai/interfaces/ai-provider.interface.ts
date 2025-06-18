@@ -47,12 +47,26 @@ export class AIModel {
 export type AIProviderOptions = {
     maxTokens?: number;
     temperature?: number;
+    imageGeneration?: {
+        size?: '256x256' | '512x512' | '1024x1024' | '1792x1024' | '1024x1792';
+        quality?: 'standard' | 'hd';
+        style?: 'vivid' | 'natural';
+        n?: number;
+    };
 };
 
 export type AIProviderCallbacks = {
     onError: (error: string) => Promise<void>;
     onText: (text: string) => Promise<void>;
     onEnd: () => Promise<void>;
+
+    onMediaGenStart?: (type: 'image' | 'audio' | 'video') => Promise<void>;
+    onMediaGenEnd?: (
+        mediaUrl: string,
+        type: 'image' | 'audio' | 'video',
+        metadata?: any
+    ) => Promise<void>;
+    onMediaGenError?: (error: string, type: 'image' | 'audio' | 'video') => Promise<void>;
 };
 
 export interface AIProviderClient {
@@ -74,12 +88,20 @@ export interface AIProviderClient {
         settings: { maxTokens?: number; temperature?: number },
         callbacks: AIProviderCallbacks
     ): Promise<unknown>;
+
+    generateImage(
+        key: string,
+        modelId: string,
+        promptOrMessages: string | Message[],
+        settings: AIProviderOptions,
+        callbacks: AIProviderCallbacks
+    );
 }
 
 export enum AIProviderId {
-    // OPENAI = 'openai',
+    openai = 'openai',
     anthropic = 'anthropic',
-    // OPENROUTER = 'openrouter',
+    openrouter = 'openrouter',
     google = 'google',
 }
 

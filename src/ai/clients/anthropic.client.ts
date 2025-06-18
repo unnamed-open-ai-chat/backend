@@ -87,16 +87,29 @@ export class AnthropicClient implements AIProviderClient {
             client.messages
                 .stream(params)
                 .on('text', text => {
-                    callbacks.onText(text);
+                    void callbacks.onText(text);
                 })
                 .on('end', () => {
-                    callbacks.onEnd();
+                    void callbacks.onEnd();
                     resolve();
                 })
                 .on('error', err => {
-                    callbacks.onError(err.message);
+                    void callbacks.onError(err.message);
                     resolve();
                 });
         });
     }
+
+    async generateImage(
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        key: string,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        modelId: string,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        promptOrMessages: string | Message[],
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        settings: AIProviderOptions,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        callbacks: AIProviderCallbacks
+    ) {}
 }

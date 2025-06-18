@@ -28,6 +28,8 @@ type AIModelCapabilities {
 enum AIProviderId {
   anthropic
   google
+  openai
+  openrouter
 }
 
 input AddMessageDto {
@@ -37,6 +39,7 @@ input AddMessageDto {
   modelId: String!
   prompt: String!
   rawDecryptKey: String!
+  useImageTool: Boolean
 }
 
 type ApiKey {

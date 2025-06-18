@@ -1,5 +1,5 @@
 import { Field, InputType } from '@nestjs/graphql';
-import { IsArray, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsArray, IsBoolean, IsOptional, IsString, MaxLength } from 'class-validator';
 
 @InputType()
 export class AddMessageDto {
@@ -29,4 +29,9 @@ export class AddMessageDto {
     @IsArray()
     @IsString({ each: true })
     attachments?: string[];
+
+    @Field({ nullable: true })
+    @IsOptional()
+    @IsBoolean()
+    useImageTool?: boolean;
 }

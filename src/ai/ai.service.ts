@@ -3,6 +3,8 @@ import { Injectable } from '@nestjs/common';
 import { Message } from '@/messages/schemas/message.schema';
 import { AnthropicClient } from './clients/anthropic.client';
 import { GoogleClient } from './clients/google.client';
+import { OpenAIClient } from './clients/openai.client';
+import { OpenRouterClient } from './clients/openrouter.client';
 import {
     AIModel,
     AIProviderCallbacks,
@@ -19,6 +21,8 @@ export class AIService {
         this.clients = {
             anthropic: new AnthropicClient(),
             google: new GoogleClient(),
+            openrouter: new OpenRouterClient(),
+            openai: new OpenAIClient(),
         };
     }
 
@@ -49,5 +53,22 @@ export class AIService {
         callbacks: AIProviderCallbacks
     ): Promise<unknown> {
         return this.clients[providerId].sendMessage(key, modelId, messages, settings, callbacks);
+    }
+
+    generateImage(
+        providerId: AIProviderId,
+        key: string,
+        modelId: string,
+        promptOrMessages: string | Message[],
+        settings: AIProviderOptions,
+        callbacks: AIProviderCallbacks
+    ): Promise<unknown> {
+        return this.clients[providerId].generateImage(
+            key,
+            modelId,
+            promptOrMessages,
+            settings,
+            callbacks
+        );
     }
 }

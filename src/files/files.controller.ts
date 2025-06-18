@@ -18,11 +18,11 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { FileUploadService } from './files.service';
 
 @Controller('files')
-@UseGuards(JwtAuthGuard)
 export class FileUploadController {
     constructor(private readonly fileUploadService: FileUploadService) {}
 
     @Post('upload')
+    @UseGuards(JwtAuthGuard)
     async uploadFile(@Req() req: Request, @CurrentUser() user: AccessJwtPayload) {
         return new Promise((resolve, reject) => {
             const bb = busboy({
@@ -99,13 +99,9 @@ export class FileUploadController {
     }
 
     @Get('serve/:id')
-    async serveFile(
-        @Param('id') id: string,
-        @Res() res: Response,
-        @CurrentUser() user: AccessJwtPayload
-    ) {
+    async serveFile(@Param('id') id: string, @Res() res: Response) {
         try {
-            const { stream, file } = await this.fileUploadService.getFileStream(id, user.sub);
+            const { stream, file } = await this.fileUploadService.getFileStream(id);
 
             // Set appropriate headers
             res.setHeader('Content-Type', file.mimetype);
@@ -119,13 +115,9 @@ export class FileUploadController {
     }
 
     @Get('download/:id')
-    async downloadFile(
-        @Param('id') id: string,
-        @Res() res: Response,
-        @CurrentUser() user: AccessJwtPayload
-    ) {
+    async downloadFile(@Param('id') id: string, @Res() res: Response) {
         try {
-            const { stream, file } = await this.fileUploadService.getFileStream(id, user.sub);
+            const { stream, file } = await this.fileUploadService.getFileStream(id);
 
             // Set download headers
             res.setHeader('Content-Type', 'application/octet-stream');

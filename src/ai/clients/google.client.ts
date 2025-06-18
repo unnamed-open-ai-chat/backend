@@ -132,19 +132,26 @@ export class GoogleClient implements AIProviderClient {
                     continue;
                 }
 
-                callbacks.onText(chunk.text).catch(error => {
-                    console.error('Error in onText callback:', error);
-                });
+                void callbacks.onText(chunk.text);
             }
 
-            callbacks.onEnd().catch(error => {
-                console.error('Error in onEnd callback:', error);
-            });
+            void callbacks.onEnd();
         } catch (error) {
             const message = (error.message as string) || 'Unknown error';
-            callbacks.onError(message).catch(err => {
-                console.error('Error in onError callback:', err);
-            });
+            void callbacks.onError(message);
         }
     }
+
+    async generateImage(
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        key: string,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        modelId: string,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        promptOrMessages: string | Message[],
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        settings: AIProviderOptions,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        callbacks: AIProviderCallbacks
+    ) {}
 }

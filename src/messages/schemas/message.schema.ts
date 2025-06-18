@@ -105,8 +105,6 @@ export type MessageDocument = Message & Document;
 export const MessageSchema = SchemaFactory.createForClass(Message);
 
 MessageSchema.index({ chatId: 1, createdAt: -1 });
-MessageSchema.index({ chatId: 1, index: 1 }, { unique: true });
-MessageSchema.index({ chatId: 1, index: 1 }, { unique: true });
 MessageSchema.index({ chatId: 1, createdAt: 1 });
 MessageSchema.index({ content: 'text' });
 MessageSchema.index({ role: 1 });
