@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 import { Session, SessionDocument } from './schemas/session.schema';
 
@@ -34,7 +34,11 @@ export class SessionsService {
 
     async findByUserId(userId: string): Promise<Session[]> {
         return this.sessionModel
-            .find({ userId, isActive: true, expiresAt: { $gt: Date.now() } })
+            .find({
+                userId: new Types.ObjectId(userId),
+                isActive: true,
+                expiresAt: { $gt: Date.now() },
+            })
             .exec();
     }
 
@@ -64,12 +68,17 @@ export class SessionsService {
 
     async revokeSession(userId: string, sessionId: string): Promise<void> {
         await this.sessionModel
-            .findOneAndUpdate({ _id: sessionId, userId }, { isActive: false })
+            .findOneAndUpdate(
+                { _id: sessionId, userId: new Types.ObjectId(userId) },
+                { isActive: false }
+            )
             .exec();
     }
 
     async revokeAllUserSessions(userId: string) {
-        await this.sessionModel.updateMany({ userId }, { isActive: false }).exec();
+        await this.sessionModel
+            .updateMany({ userId: new Types.ObjectId(userId) }, { isActive: false })
+            .exec();
     }
 
     async cleanupExpiredSessions(): Promise<void> {

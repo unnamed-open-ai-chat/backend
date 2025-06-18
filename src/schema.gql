@@ -181,7 +181,7 @@ type Mutation {
   createChat: Chat!
   createPreferences: UserPreferences!
   deleteApiKey(id: String!): Boolean!
-  deleteFile(id: ID!): Boolean!
+  deleteFile(id: String!): Boolean!
   forkBranch(originalBranchId: String!, payload: ForkBranchDto!): ChatBranch!
   login(payload: LoginDto!): SessionResponse!
   logout: Boolean!
@@ -193,7 +193,7 @@ type Mutation {
   updateApiKey(id: String!, payload: UpdateApiKeyDto!): ApiKey!
   updateBranch(branchId: String!, payload: UpdateBranchDto!): ChatBranch!
   updateChat(id: String!, payload: UpdateChatDto!): Chat!
-  updateFile(id: ID!, updateFileDto: UpdateFileDto!): File!
+  updateFile(id: String!, updateFileDto: UpdateFileDto!): File!
   updatePassword(payload: ChangePasswordDto!): User!
   updatePreferences(payload: UpdatePreferencesDto!): UserPreferences!
   updateUser(payload: UpdateUserDto!): User!
@@ -206,7 +206,7 @@ type Query {
   getChatBranches(chatId: String!): [ChatBranch!]!
   getChatMessages(query: GetMessagesDto!): MessagesResponse!
   getChats(query: GetManyChatsDto!): ChatsResponse!
-  getFileById(id: ID!): File!
+  getFileById(id: String!): File!
   getPreferences: UserPreferences!
   getSessions: [Session!]!
   getUser: User!

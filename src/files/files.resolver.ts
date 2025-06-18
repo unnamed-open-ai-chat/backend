@@ -1,5 +1,5 @@
 import { UseGuards } from '@nestjs/common';
-import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 
 import { AccessJwtPayload } from '@/auth/interfaces/jwt-payload.interface';
 import { CurrentUser } from '../auth/decorators/current-user.decorator'; // Adjust path as needed
@@ -20,7 +20,7 @@ export class FileUploadResolver {
 
     @Query(() => File, { name: 'getFileById' })
     async getFileById(
-        @Args('id', { type: () => ID }) id: string,
+        @Args('id') id: string,
         @CurrentUser() user: AccessJwtPayload
     ): Promise<File> {
         return this.fileUploadService.getFileById(id, user.sub);
@@ -33,7 +33,7 @@ export class FileUploadResolver {
 
     @Mutation(() => File, { name: 'updateFile' })
     async updateFile(
-        @Args('id', { type: () => ID }) id: string,
+        @Args('id') id: string,
         @Args('updateFileDto') updateFileDto: UpdateFileDto,
         @CurrentUser() user: AccessJwtPayload
     ): Promise<File> {
@@ -42,7 +42,7 @@ export class FileUploadResolver {
 
     @Mutation(() => Boolean, { name: 'deleteFile' })
     async deleteFile(
-        @Args('id', { type: () => ID }) id: string,
+        @Args('id') id: string,
         @CurrentUser() user: AccessJwtPayload
     ): Promise<boolean> {
         return this.fileUploadService.deleteFile(id, user.sub);
