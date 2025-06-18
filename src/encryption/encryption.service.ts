@@ -5,24 +5,17 @@ import * as crypto from 'crypto';
 @Injectable()
 export class EncryptionService {
     private readonly algorithm = 'aes-256-gcm';
-    private readonly masterKey: Buffer;
     private readonly masterIv: Buffer;
 
     constructor(config: ConfigService) {
         // Initialize encryption keys from environment variables
-        const encryptionKey = config.get<string>('ENCRYPTION_KEY');
         const encryptionIv = config.get<string>('ENCRYPTION_IV');
-
-        if (!encryptionKey || encryptionKey.length !== 64) {
-            throw new Error('ENCRYPTION_KEY must be 32-byte (64 hex chars) key');
-        }
 
         if (!encryptionIv || encryptionIv.length !== 32) {
             throw new Error('ENCRYPTION_IV must be 16-byte (32 hex chars) key');
         }
 
         // Convert hex strings to buffers
-        this.masterKey = Buffer.from(encryptionKey, 'hex');
         this.masterIv = Buffer.from(encryptionIv, 'hex');
     }
 
@@ -275,55 +268,6 @@ export class EncryptionService {
         } catch (error) {
             console.error('Key validation error:', error);
             return false;
-        }
-    }
-
-    /**
-     * Encrypts sensitive data using the master key (for database storage)
-     * @param text The text to encrypt with master key
-     * @returns Encrypted text
-     */
-    encryptWithMasterKey(text: string): string {
-        try {
-            const iv = crypto.randomBytes(16);
-            const cipher = crypto.createCipheriv(this.algorithm, this.masterKey, iv);
-
-            let encrypted = cipher.update(text, 'utf-8', 'hex');
-            encrypted += cipher.final('hex');
-
-            const authTag = cipher.getAuthTag();
-            return iv.toString('hex') + authTag.toString('hex') + encrypted;
-        } catch (error) {
-            console.error('Master encryption error:', error);
-            throw new Error('Master encryption failed');
-        }
-    }
-
-    /**
-     * Decrypts sensitive data using the master key (from database storage)
-     * @param encryptedText The encrypted text
-     * @returns Decrypted text
-     */
-    decryptWithMasterKey(encryptedText: string): string {
-        try {
-            if (encryptedText.length < 66) {
-                throw new Error('Invalid encrypted text format');
-            }
-
-            const iv = Buffer.from(encryptedText.slice(0, 32), 'hex');
-            const authTag = Buffer.from(encryptedText.slice(32, 64), 'hex');
-            const encrypted = encryptedText.slice(64);
-
-            const decipher = crypto.createDecipheriv(this.algorithm, this.masterKey, iv);
-            decipher.setAuthTag(authTag);
-
-            let decrypted = decipher.update(encrypted, 'hex', 'utf-8');
-            decrypted += decipher.final('utf-8');
-
-            return decrypted;
-        } catch (error) {
-            console.error('Master decryption error:', error);
-            throw new Error('Master decryption failed');
         }
     }
 }
