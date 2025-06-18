@@ -1,4 +1,4 @@
-import { UseGuards } from '@nestjs/common';
+import { NotFoundException, UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Types } from 'mongoose';
 
@@ -18,7 +18,7 @@ import { ChatService } from './chats.service';
 import { AddMessageDto } from './dto/add-message.dto';
 import { GetChatDto, GetManyChatsDto } from './dto/get-chat-dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
-import { Chat, ChatsResponse, SingleChatResponse } from './schemas/chat.schema';
+import { Chat, ChatsResponse, PublicChatResponse, SingleChatResponse } from './schemas/chat.schema';
 
 @Resolver(() => Chat)
 export class ChatsResolver {
@@ -83,6 +83,30 @@ export class ChatsResolver {
             chat,
             branches,
             totalMessages,
+        };
+    }
+
+    @Query(() => PublicChatResponse)
+    async getPublicChat(@Args('query') queryOptions: GetChatDto): Promise<PublicChatResponse> {
+        const { chatId } = queryOptions;
+
+        const chat = await this.chatService.findById(chatId, 'none');
+
+        if (!chat.isPublic) {
+            throw new NotFoundException('Chat not found');
+        }
+
+        if (!chat.defaultBranch) {
+            throw new NotFoundException('No default branch found');
+        }
+
+        const messages = await this.messagesService.findByBranchId({
+            branchId: chat.defaultBranch?._id.toString(),
+        });
+
+        return {
+            chat,
+            messages: messages.messages,
         };
     }
 

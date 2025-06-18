@@ -3,6 +3,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
 import { ChatBranch } from '@/branches/schemas/chat-branch.schema';
+import { Message } from '@/messages/schemas/message.schema';
 
 @Schema({ timestamps: true })
 @ObjectType()
@@ -66,6 +67,15 @@ export class SingleChatResponse {
 
     @Field()
     totalMessages: number;
+}
+
+@ObjectType()
+export class PublicChatResponse {
+    @Field(() => Chat)
+    chat: Chat;
+
+    @Field(() => [Message])
+    messages: Message[];
 }
 
 ChatSchema.index({ userId: 1, lastActivityAt: -1 });

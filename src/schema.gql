@@ -199,6 +199,11 @@ type Mutation {
   updateUser(payload: UpdateUserDto!): User!
 }
 
+type PublicChatResponse {
+  chat: Chat!
+  messages: [Message!]!
+}
+
 type Query {
   getApiKeys: [ApiKey!]!
   getAvailableModels(rawDecryptKey: String!): [AIModel!]!
@@ -208,6 +213,7 @@ type Query {
   getChats(query: GetManyChatsDto!): ChatsResponse!
   getFileById(id: String!): File!
   getPreferences: UserPreferences!
+  getPublicChat(query: GetChatDto!): PublicChatResponse!
   getSessions: [Session!]!
   getUser: User!
   getUserFiles: [File!]!
