@@ -1,4 +1,6 @@
 import OpenAI from 'openai';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const pdf = require('pdf-parse');
 
 import { FileUploadService } from '@/files/files.service';
 import { Message, MessageRole } from '@/messages/schemas/message.schema';
@@ -191,25 +193,33 @@ export class OpenRouterClient implements AIProviderClient {
                         content.push({ type: 'text', text: textContent });
                     }
 
-                    // Add images from attachments
+                    // Add from attachments
                     for (const attachmentId of message.attachments) {
-                        try {
-                            const { data: attachmentData } =
-                                await this.fileUploadService.getAttachmentAsBase64(
-                                    attachmentId.toString()
-                                );
+                        const file = await this.fileUploadService.getFileById(
+                            attachmentId.toString()
+                        );
 
-                            if (attachmentData) {
-                                content.push({
-                                    type: 'image_url',
-                                    image_url: {
-                                        url: attachmentData,
-                                    },
-                                });
-                            }
-                        } catch (error) {
-                            console.error('Error loading attachment:', attachmentId, error);
-                            // Continue processing other attachments
+                        if (file.mimetype.startsWith('image/')) {
+                            const base64 = this.fileUploadService.readFileAsBase64(file);
+                            content.push({
+                                type: 'image_url',
+                                image_url: {
+                                    url: base64,
+                                },
+                            });
+                        } else if (file.mimetype === 'text/plain') {
+                            const text = this.fileUploadService.readFileAsPlainText(file);
+                            content.push({
+                                type: 'text',
+                                text: `[Attached File]:\n${text}`,
+                            });
+                        } else if (file.mimetype === 'application/pdf') {
+                            const buffer = this.fileUploadService.readFileAsBuffer(file);
+                            const pdfText = await pdf(buffer);
+                            content.push({
+                                type: 'text',
+                                text: `[Attached PDF File (Extracted Text)]:\n${pdfText.text}`,
+                            });
                         }
                     }
 

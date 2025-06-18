@@ -409,6 +409,22 @@ export class FileUploadService {
         return { stream, file };
     }
 
+    readFileAsBase64(file: File): string {
+        const buffer = fs.readFileSync(file.path);
+        const base64 = buffer.toString('base64');
+        return `data:${file.mimetype};base64,${base64}`;
+    }
+
+    readFileAsPlainText(file: File): string {
+        const buffer = fs.readFileSync(file.path);
+        return buffer.toString('utf-8');
+    }
+
+    readFileAsBuffer(file: File): Buffer {
+        const buffer = fs.readFileSync(file.path);
+        return buffer;
+    }
+
     /**
      * Get attachment data formatted for AI processing (base64 data URL)
      * Returns the file as a base64 data URL ready to send to AI APIs
