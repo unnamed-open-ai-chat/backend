@@ -20,7 +20,7 @@ import { WebsocketsModule } from './websockets/websockets.module';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { FileUploadModule } from './files/files.module';
+import { StorageModule } from './storage/storage.module';
 
 @Module({
     imports: [
@@ -87,9 +87,9 @@ import { FileUploadModule } from './files/files.module';
         BranchesModule,
         ChatsModule,
         EncryptionModule,
-        FileUploadModule,
         MessagesModule,
         SessionsModule,
+        StorageModule,
         UsersModule,
         PreferencesModule,
         WebsocketsModule,

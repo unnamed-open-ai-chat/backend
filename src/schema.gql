@@ -82,10 +82,21 @@ type ChatsResponse {
   total: Float!
 }
 
+input CompleteFileDto {
+  fileId: String!
+  parts: [FilePart!]!
+}
+
 input CreateApiKeyDto {
   alias: String!
   apiKey: String!
   provider: AIProviderId!
+}
+
+input CreateFileDto {
+  filename: String!
+  mimetype: String!
+  size: Float!
 }
 
 """
@@ -102,13 +113,17 @@ type DeviceInfo {
 
 type File {
   _id: String!
+  clientToken: String
   createdAt: DateTime!
-  description: String
   filename: String!
   mimetype: String!
-  originalName: String!
   size: Float!
-  updatedAt: DateTime!
+  uploadId: String
+}
+
+input FilePart {
+  etag: String!
+  partNumber: Float!
 }
 
 input ForkBranchDto {
@@ -178,7 +193,9 @@ type ModelConfig {
 
 type Mutation {
   addApiKey(payload: CreateApiKeyDto!): ApiKey!
+  completeFile(payload: CompleteFileDto!): File!
   createChat: Chat!
+  createFile(payload: CreateFileDto!): File!
   createPreferences: UserPreferences!
   deleteApiKey(id: String!): Boolean!
   deleteFile(id: String!): Boolean!
@@ -193,7 +210,6 @@ type Mutation {
   updateApiKey(id: String!, payload: UpdateApiKeyDto!): ApiKey!
   updateBranch(branchId: String!, payload: UpdateBranchDto!): ChatBranch!
   updateChat(id: String!, payload: UpdateChatDto!): Chat!
-  updateFile(id: String!, updateFileDto: UpdateFileDto!): File!
   updatePassword(payload: ChangePasswordDto!): User!
   updatePreferences(payload: UpdatePreferencesDto!): UserPreferences!
   updateUser(payload: UpdateUserDto!): User!
@@ -269,11 +285,6 @@ input UpdateChatDto {
   isPublic: Boolean
   pinned: Boolean
   title: String
-}
-
-input UpdateFileDto {
-  description: String
-  originalName: String
 }
 
 input UpdatePreferencesDto {

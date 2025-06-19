@@ -9,9 +9,9 @@ import { GqlAuthGuard } from '@/auth/guards/gql-auth.guard';
 import { AccessJwtPayload } from '@/auth/interfaces/jwt-payload.interface';
 import { BranchesService } from '@/branches/branches.service';
 import { EncryptionService } from '@/encryption/encryption.service';
-import { FileUploadService } from '@/files/files.service';
 import { ApiKeysService } from '@/keys/api-key.service';
 import { MessagesService } from '@/messages/messages.service';
+import { StorageService } from '@/storage/storage.service';
 import { WebsocketsService } from '@/websockets/websockets.service';
 import { Message, MessageRole } from '../messages/schemas/message.schema';
 import { ChatService } from './chats.service';
@@ -30,7 +30,7 @@ export class ChatsResolver {
         private apiKeyService: ApiKeysService,
         private encryptionService: EncryptionService,
         private websocketsService: WebsocketsService,
-        private fileService: FileUploadService
+        private storageService: StorageService
     ) {}
 
     @UseGuards(GqlAuthGuard)
@@ -133,10 +133,10 @@ export class ChatsResolver {
         @Args('payload') payload: AddMessageDto
     ) {
         const branch = await this.branchesService.findById(payload.branchId, user.sub);
-        const attachments: Types.ObjectId[] = [];
+        const attachments: string[] = [];
 
         for (const attachment of payload.attachments || []) {
-            const queried = await this.fileService.getFileById(attachment, user.sub);
+            const queried = await this.storageService.getFileById(attachment, user.sub);
             attachments.push(queried._id);
         }
 
@@ -180,7 +180,7 @@ export class ChatsResolver {
         let completedMessage = '';
 
         this.websocketsService.emitToBranch(user.sub, payload.branchId, 'message:start', null);
-        const responseAttachments: Types.ObjectId[] = [];
+        const responseAttachments: string[] = [];
 
         const callbacks: AIProviderCallbacks = {
             onEnd: async () => {
@@ -246,8 +246,13 @@ export class ChatsResolver {
             },
 
             onMediaGenEnd: async (url: string, type: string) => {
-                const attachment = await this.fileService.uploadFromURL(url, user.sub);
-                const attachmentId = attachment?.file?._id;
+                const attachment = await this.storageService.uploadFromURL(
+                    url,
+                    'generation',
+                    type,
+                    user.sub
+                );
+                const attachmentId = attachment._id;
                 if (attachmentId) responseAttachments.push(attachmentId);
 
                 this.websocketsService.emitToBranch(user.sub, payload.branchId, 'media:end', {

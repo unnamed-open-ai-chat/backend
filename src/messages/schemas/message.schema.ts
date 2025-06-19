@@ -40,9 +40,9 @@ export class Message {
     @Field(() => String)
     _id: Types.ObjectId;
 
-    @Prop([{ type: Types.ObjectId, ref: 'File' }])
+    @Prop([{ type: String, ref: 'File' }])
     @Field(() => [ID])
-    attachments: Types.ObjectId[];
+    attachments: string[];
 
     @Prop({ types: Types.ObjectId, ref: 'Chat', required: true })
     @Field(() => String)

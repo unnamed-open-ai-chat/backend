@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { Message } from '@/messages/schemas/message.schema';
+import { StorageService } from '@/storage/storage.service';
 import { AnthropicClient } from './clients/anthropic.client';
 import { GoogleClient } from './clients/google.client';
 import { OpenAIClient } from './clients/openai.client';
@@ -12,17 +13,16 @@ import {
     AIProviderId,
     AIProviderOptions,
 } from './interfaces/ai-provider.interface';
-import { FileUploadService } from '@/files/files.service';
 
 @Injectable()
 export class AIService {
     private readonly clients: Record<AIProviderId, AIProviderClient>;
 
-    constructor(private readonly fileService: FileUploadService) {
+    constructor(storageService: StorageService) {
         this.clients = {
             anthropic: new AnthropicClient(),
             google: new GoogleClient(),
-            openrouter: new OpenRouterClient(fileService),
+            openrouter: new OpenRouterClient(storageService),
             openai: new OpenAIClient(),
         };
     }

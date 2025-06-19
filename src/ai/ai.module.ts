@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 
-import { FileUploadModule } from '@/files/files.module';
+import { StorageModule } from '@/storage/storage.module';
 import { AIService } from './ai.service';
 
 @Module({
-    imports: [FileUploadModule],
+    imports: [StorageModule],
     providers: [AIService],
     exports: [AIService],
 })

@@ -1,20 +1,18 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { Document } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
 
 @Schema({ timestamps: true })
 @ObjectType()
 export class File {
     @Field(() => String)
-    _id: Types.ObjectId;
+    @Prop({ type: String, default: uuidv4 }) // <- acá
+    _id: string;
 
     @Prop({ required: true })
     @Field()
     filename: string;
-
-    @Prop({ required: true })
-    @Field()
-    originalName: string;
 
     @Prop({ required: true })
     @Field()
@@ -25,20 +23,18 @@ export class File {
     size: number;
 
     @Prop({ required: true })
-    path: string;
-
-    @Prop({ required: true })
     userId: string;
 
     @Prop()
     @Field({ nullable: true })
-    description?: string;
+    uploadId?: string;
+
+    @Prop()
+    @Field({ nullable: true })
+    clientToken?: string;
 
     @Field()
     createdAt: Date;
-
-    @Field()
-    updatedAt: Date;
 }
 
 @ObjectType()

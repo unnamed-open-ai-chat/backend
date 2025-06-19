@@ -4,9 +4,9 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AIModule } from '@/ai/ai.module';
 import { BranchesModule } from '@/branches/branches.module';
 import { EncryptionModule } from '@/encryption/encryption.module';
-import { FileUploadModule } from '@/files/files.module';
 import { ApiKeysModule } from '@/keys/api-key.module';
 import { MessagesModule } from '@/messages/messages.module';
+import { StorageModule } from '@/storage/storage.module';
 import { WebsocketsModule } from '@/websockets/websockets.module';
 import { Message, MessageSchema } from '../messages/schemas/message.schema';
 import { ChatsResolver } from './chats.resolver';
@@ -23,8 +23,8 @@ import { Chat, ChatSchema } from './schemas/chat.schema';
         ApiKeysModule,
         EncryptionModule,
         BranchesModule,
-        FileUploadModule,
         MessagesModule,
+        StorageModule,
         WebsocketsModule,
     ],
     providers: [ChatService, ChatsResolver],

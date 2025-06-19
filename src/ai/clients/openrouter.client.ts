@@ -2,8 +2,8 @@ import OpenAI from 'openai';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const pdf = require('pdf-parse');
 
-import { FileUploadService } from '@/files/files.service';
 import { Message, MessageRole } from '@/messages/schemas/message.schema';
+import { StorageService } from '@/storage/storage.service';
 import {
     AIModel,
     AIProviderCallbacks,
@@ -13,7 +13,7 @@ import {
 } from '../interfaces/ai-provider.interface';
 
 export class OpenRouterClient implements AIProviderClient {
-    constructor(private readonly fileUploadService: FileUploadService) {}
+    constructor(private readonly storageService: StorageService) {}
 
     private createClient(key: string): OpenAI {
         return new OpenAI({
@@ -195,26 +195,23 @@ export class OpenRouterClient implements AIProviderClient {
 
                     // Add from attachments
                     for (const attachmentId of message.attachments) {
-                        const file = await this.fileUploadService.getFileById(
-                            attachmentId.toString()
-                        );
+                        const file = await this.storageService.getFileById(attachmentId.toString());
 
                         if (file.mimetype.startsWith('image/')) {
-                            const base64 = this.fileUploadService.readFileAsBase64(file);
                             content.push({
                                 type: 'image_url',
                                 image_url: {
-                                    url: base64,
+                                    url: this.storageService.getUrlForFile(file._id),
                                 },
                             });
                         } else if (file.mimetype === 'text/plain') {
-                            const text = this.fileUploadService.readFileAsPlainText(file);
+                            const text = await this.storageService.readFileAsPlainText(file._id);
                             content.push({
                                 type: 'text',
                                 text: `[Attached File]:\n${text}`,
                             });
                         } else if (file.mimetype === 'application/pdf') {
-                            const buffer = this.fileUploadService.readFileAsBuffer(file);
+                            const buffer = await this.storageService.readFileAsBuffer(file._id);
                             const pdfText = await pdf(buffer);
                             content.push({
                                 type: 'text',
