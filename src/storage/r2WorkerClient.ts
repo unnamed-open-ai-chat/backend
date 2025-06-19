@@ -3,6 +3,7 @@ import fetch from 'node-fetch';
 
 export interface CreateResponse {
     success: boolean;
+    error?: string;
     uploadId: string;
     fileId: string;
     totalParts: number;
@@ -12,6 +13,7 @@ export interface CreateResponse {
 
 export interface CompleteResponse {
     success: boolean;
+    error?: string;
     etag: string;
     size: number;
 }
@@ -23,19 +25,21 @@ export class R2WorkerClient {
     ) {}
 
     private generateJwtTicket(type: string, action: string) {
+        const now = Math.floor(Date.now() / 1000);
+
         return jwt.sign(
             {
                 type,
                 action,
+                iat: now - 60, // Fix for clock skew
+                exp: now + 6 * 60, // 5 minutes - 1 minute for clock skew
             },
             this.secret,
             {
                 algorithm: 'HS256',
-                expiresIn: '5m',
             }
         );
     }
-
     private async apiFetch<T>(
         method: string,
         path: string,

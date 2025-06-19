@@ -111,7 +111,7 @@ export class StorageService {
         const upload = await this.r2.createUpload(file._id, fileSize, mimetype);
         if (!upload.success) {
             await file.deleteOne();
-            throw new BadRequestException('File upload failed');
+            throw new BadRequestException('File upload failed: ' + upload.error);
         }
         file.clientToken = upload.clientToken;
         file.uploadId = upload.uploadId;
@@ -137,7 +137,7 @@ export class StorageService {
         const completed = await this.r2.completeUpload(file.uploadId, fileId, parts);
 
         if (!completed.success) {
-            throw new BadRequestException('File upload failed');
+            throw new BadRequestException('File upload failed: ' + completed.error);
         }
 
         file.clientToken = undefined;
