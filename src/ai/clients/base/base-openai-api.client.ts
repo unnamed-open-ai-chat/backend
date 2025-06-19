@@ -31,7 +31,7 @@ export function normalizeOpenAIModel(
     const { author, name } = extractNameAndAuthor(model.id);
 
     const imageAnalysis = model.id.includes('vision') || model.id.includes('gpt-4');
-    const functionCalling = !model.id.includes('o1');
+    const functionCalling = model.id.includes('o1');
     const imageGeneration =
         model.id.includes('dall-e') ||
         model.id.includes('stable-diffusion') ||
