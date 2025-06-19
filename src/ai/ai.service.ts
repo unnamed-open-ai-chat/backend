@@ -18,17 +18,19 @@ import {
 export class AIService {
     private readonly clients: Record<AIProviderId, AIProviderClient>;
 
-    constructor(storageService: StorageService) {
+    constructor(private readonly storageService: StorageService) {
         this.clients = {
             anthropic: new AnthropicClient(),
             google: new GoogleClient(),
-            openrouter: new OpenRouterClient(storageService),
-            openai: new OpenAIClient(),
+            openrouter: new OpenRouterClient(this.storageService),
+            openai: new OpenAIClient(this.storageService),
         };
     }
 
     async validateKeyFormat(providerId: AIProviderId, key: string): Promise<boolean> {
-        return this.clients[providerId].validateKeyFormat(key);
+        const provider = this.clients[providerId];
+        const models = await provider.getModels(key).catch(() => []);
+        return models.length > 0;
     }
 
     async getModels(providerId: AIProviderId, key: string): Promise<AIModel[]> {

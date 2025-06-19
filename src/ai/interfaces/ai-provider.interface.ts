@@ -70,8 +70,6 @@ export type AIProviderCallbacks = {
 };
 
 export interface AIProviderClient {
-    validateKeyFormat(key: string): Promise<boolean>;
-
     getModels(key: string): Promise<AIModel[]>;
 
     countInputTokens(

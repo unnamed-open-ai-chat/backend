@@ -2,6 +2,8 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const pdf = require('pdf-parse');
 
 import fetch from 'node-fetch';
 import { R2WorkerClient } from './r2WorkerClient';
@@ -20,6 +22,8 @@ export class StorageService {
         'text/plain',
         'application/msword',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'audio/mpeg',
+        'audio/wav',
     ];
 
     private readonly r2: R2WorkerClient;
@@ -187,6 +191,22 @@ export class StorageService {
      */
     async readFileAsBase64URL(id: string, mimetype: string): Promise<string> {
         return await this.r2.readAsBase64URL(id, mimetype);
+    }
+
+    /**
+     * Get file as base64 url
+     */
+    async readFileAsBase64Buffer(id: string): Promise<string> {
+        return await this.r2.readAsBase64Buffer(id);
+    }
+
+    /**
+     * Get file pdf as literal text
+     */
+    async readFileAsPDF(id: string): Promise<string> {
+        const buffer = await this.readFileAsBuffer(id);
+        const pdfText = await pdf(buffer);
+        return pdfText.text;
     }
 
     async uploadFromURL(url: string, name: string, mimeType: string, userId: string) {
