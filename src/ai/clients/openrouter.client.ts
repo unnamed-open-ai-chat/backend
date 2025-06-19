@@ -196,12 +196,25 @@ export class OpenRouterClient implements AIProviderClient {
                     // Add from attachments
                     for (const attachmentId of message.attachments) {
                         const file = await this.storageService.getFileById(attachmentId.toString());
+                        let url = this.storageService.getUrlForFile(file._id);
+
+                        const isLocal =
+                            url.startsWith('http://localhost:') ||
+                            url.startsWith('http://127.0.0.1:');
+
+                        if (isLocal) {
+                            url = await this.storageService.readFileAsBase64URL(
+                                file._id,
+                                file.mimetype
+                            );
+                            console.warn('Local url detected, using base64 url...');
+                        }
 
                         if (file.mimetype.startsWith('image/')) {
                             content.push({
                                 type: 'image_url',
                                 image_url: {
-                                    url: this.storageService.getUrlForFile(file._id),
+                                    url,
                                 },
                             });
                         } else if (file.mimetype === 'text/plain') {

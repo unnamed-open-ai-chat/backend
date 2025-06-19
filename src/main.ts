@@ -10,6 +10,8 @@ async function bootstrap() {
 
     if (!process.env.CORS_ORIGIN) {
         console.warn('CORS_ORIGIN is not set');
+    } else {
+        console.log('CORS_ORIGIN set to:', process.env.CORS_ORIGIN);
     }
 
     app.enableCors({

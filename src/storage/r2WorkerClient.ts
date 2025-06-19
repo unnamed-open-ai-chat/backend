@@ -167,4 +167,9 @@ export class R2WorkerClient {
         const arrayBuffer = await response.arrayBuffer();
         return Buffer.from(arrayBuffer);
     }
+
+    public async readAsBase64URL(fileId: string, mimeType: string): Promise<string> {
+        const buffer = await this.readFileAsBuffer(fileId);
+        return `data:${mimeType};base64,${buffer.toString('base64')}`;
+    }
 }

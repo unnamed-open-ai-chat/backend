@@ -182,6 +182,13 @@ export class StorageService {
         return await this.r2.readFileAsBuffer(id);
     }
 
+    /**
+     * Get file as base64 url
+     */
+    async readFileAsBase64URL(id: string, mimetype: string): Promise<string> {
+        return await this.r2.readAsBase64URL(id, mimetype);
+    }
+
     async uploadFromURL(url: string, name: string, mimeType: string, userId: string) {
         const res = await fetch(url);
         const arrayBuffer = await res.arrayBuffer();
